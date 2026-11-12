@@ -84,11 +84,16 @@ class Session:
         self.last_turn_wrote = False
         self.seen_utterances: deque[str] = deque(maxlen=200)
         self.lang = settings.greeting_language
+        self.preferred = "auto"
 
     # ------------------------------------------------------------------ public
     def set_language(self, lang: str) -> None:
+        """Shopkeeper's primary language: replies always use it. 'auto' = reply in the speaker's language."""
         if lang in ("hi", "kn", "en"):
             self.lang = lang
+            self.preferred = lang
+        elif lang == "auto":
+            self.preferred = "auto"
 
     def greeting(self) -> Reply:
         lang = self.lang
@@ -108,7 +113,9 @@ class Session:
             return None
 
         parsed = parse(text, self.ledger.customers, today_ist())
-        if len(parsed.tokens) <= 3 and not detected_lang and parsed.lang_hint == "en":
+        if self.preferred != "auto":
+            lang = self.preferred     # understands hi/kn/en, always answers in the shopkeeper's language
+        elif len(parsed.tokens) <= 3 and not detected_lang and parsed.lang_hint == "en":
             lang = self.lang          # "haan", "350", "Kumar wale": no language signal -> keep the conversation's
         else:
             lang = self._pick_lang(detected_lang, parsed.lang_hint)

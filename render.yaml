@@ -1,0 +1,23 @@
+# One-click hosting on Render (free tier supports WebSockets).
+# Dashboard -> New -> Blueprint -> pick this repo -> paste GNANI_API_KEY when asked.
+services:
+  - type: web
+    name: namma-chotu
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: GNANI_API_KEY
+        sync: false          # you type it in Render's dashboard; never in the repo
+      - key: VOICE_MODE
+        value: gnani
+      - key: GNANI_STT_LANGUAGES
+        value: hi-IN,kn-IN,en-IN
+      - key: DB_PATH
+        value: data/khata.db
+      - key: SEED_DEMO
+        value: "1"

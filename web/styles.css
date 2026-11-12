@@ -190,3 +190,9 @@ h2 { font-size: 17px; margin: 22px 4px 8px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+.langsel {
+  border: 0; border-radius: 999px; padding: 5px 10px; font-size: 14px; font-weight: 600;
+  background: var(--wash); color: var(--leaf-deep); appearance: none; -webkit-appearance: none;
+}
+@media (max-width: 440px) { .tag { display: none; } .brand h1 { font-size: 17px; } .status { gap: 6px; } }

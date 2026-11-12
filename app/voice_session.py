@@ -159,6 +159,10 @@ class VoiceSession:
                 except Exception as e:
                     log.warning("commit failed: %s", e)
                 self._flush_task = asyncio.create_task(self._flush_after_release())
+        elif typ == "lang":
+            self.dialogue.set_language(d.get("lang") or "auto")
+            if d.get("lang") in ("hi", "kn", "en"):
+                await self.deliver(self.dialogue.greeting(), t_end=None)   # confirms + re-discloses AI
         elif typ == "interrupt":
             await self.barge_in("client")
         elif typ == "text":

@@ -104,3 +104,15 @@ def test_no_lending(session, utt):
 def test_no_pressure(session, utt):
     r = say(session, utt)
     assert "REFUSE_PRESSURE" in r.intents and not any(e["type"] == "reminder" for e in r.events)
+
+
+def test_primary_language_locks_replies(session):
+    session.set_language("en")
+    r = say(session, "ರಮೇಶ್ ಕುಮಾರ್ ಮುನ್ನೂರ ನಲವತ್ತು ಉದ್ರಿ")      # spoken Kannada, shopkeeper chose English
+    assert r.lang == "en" and "Ramesh Kumar" in r.display and "credit" in r.display
+    session.set_language("kn")
+    r = say(session, "Suresh ka 200 udhaar")
+    assert r.lang == "kn" and "ಉದ್ರಿ" in r.display
+    session.set_language("auto")
+    r = say(session, "Amit ka 100 udhaar likh do")
+    assert r.lang == "hi"

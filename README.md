@@ -69,7 +69,10 @@ python scripts/smoke_stt.py      # streams that wav into Prisma v3.0, sends comm
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-Open http://localhost:8000 on the laptop. On a phone the mic needs **HTTPS**, so tunnel it:
+Open http://localhost:8000 on the laptop.
+
+**Hosted link (Render, free):** dashboard.render.com, then New, then Blueprint, then pick this repo (it reads `render.yaml`). Paste `GNANI_API_KEY` when asked. You get an `https://….onrender.com` link that works on any phone (HTTPS, so the mic works). On the free tier the first visit after 15 idle minutes takes about 50 s to wake. Demo data resets on each deploy.
+ On a phone the mic needs **HTTPS**, so tunnel it:
 
 ```bash
 cloudflared tunnel --url http://localhost:8000     # or: ngrok http 8000
@@ -78,6 +81,8 @@ cloudflared tunnel --url http://localhost:8000     # or: ngrok http 8000
 Without a key (`VOICE_MODE=mock`) the app runs in **mock mode**: typed text only, nothing spoken, and the header says so. It never pretends to be Gnani.
 
 ## Using it
+
+- **Pick the shopkeeper's language** (हिंदी / ಕನ್ನಡ / English) on the start screen, or switch any time from the header. Chotu understands all three, mixed, whatever is picked. Replies and every screen label follow the chosen language. *Auto* replies in whichever language was spoken.
 
 - **Hold the green button and talk.** Release when done. Space bar works too on a laptop.
 - **Hands-free:** tap "Hold to talk" to switch. Start commands with **"Chotu, …"**, so customers chatting at the counter are ignored. Talking over the agent stops it (barge-in).
