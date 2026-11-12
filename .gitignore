@@ -1,0 +1,10 @@
+.env
+data/
+*.db
+*.db-*
+.ledger_key
+__pycache__/
+.pytest_cache/
+smoke_tts.wav
+*.wav
+.venv/

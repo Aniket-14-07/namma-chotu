@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E6B45">
+<title>Namma Chotu, voice khata</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">छो</span>
+    <div>
+      <h1>Namma Chotu</h1>
+      <p class="tag">Your kirana, your voice</p>
+    </div>
+  </div>
+  <div class="status">
+    <span id="modeBadge" class="badge">connecting</span>
+    <span id="latency" class="latency" title="End of your speech to first reply audio" hidden></span>
+  </div>
+</header>
+
+<main>
+  <!-- BOLO: voice -->
+  <section id="tab-bolo" class="tab active" aria-label="Bolo">
+    <div id="ledgerLine" class="ledger-line empty" aria-live="polite">
+      <div class="margin"></div>
+      <div class="entry">
+        <p class="who">Aaj ki pehli entry bolo</p>
+        <p class="amt">"Ramesh ka 340 udhaar"</p>
+        <p class="meta"></p>
+      </div>
+    </div>
+
+    <div id="question" class="question" hidden>
+      <p class="q-text"></p>
+      <div class="q-options"></div>
+    </div>
+
+    <ol id="feed" class="feed" aria-live="polite"></ol>
+
+    <div id="reminderCard" class="reminder" hidden>
+      <p class="r-title">Polite reminder ready</p>
+      <p class="r-text"></p>
+      <a class="r-send" target="_blank" rel="noopener">Send on WhatsApp</a>
+      <button class="r-close" type="button">Close</button>
+    </div>
+  </section>
+
+  <!-- HISAAB: dashboard -->
+  <section id="tab-hisaab" class="tab" aria-label="Hisaab">
+    <div class="today">
+      <div class="stat credit"><p class="v" id="dCredit">—</p><p class="k">Udhaar gaya aaj</p></div>
+      <div class="stat paid"><p class="v" id="dPaid">—</p><p class="k">Jama hua aaj</p></div>
+    </div>
+    <div class="outstanding">
+      <p class="k">Market mein baaki</p>
+      <p class="v" id="dOut">—</p>
+      <p class="sub" id="dCust"></p>
+    </div>
+    <h2>Sabse zyada baaki</h2>
+    <ol id="dTop" class="rows"></ol>
+    <h2>Aaj ki entries</h2>
+    <ol id="dRecent" class="rows txns"></ol>
+  </section>
+
+  <!-- KHATA: customers -->
+  <section id="tab-khata" class="tab" aria-label="Khata">
+    <input id="search" class="search" type="search" placeholder="Grahak dhoondo" autocomplete="off">
+    <ol id="custList" class="rows"></ol>
+    <div id="custDetail" class="detail" hidden></div>
+  </section>
+</main>
+
+<div class="dock">
+  <div class="controls">
+    <button id="modeBtn" class="pill" type="button" aria-pressed="false">Hold to talk</button>
+    <button id="typeBtn" class="pill ghost" type="button">Type</button>
+  </div>
+  <button id="mic" class="mic" type="button" aria-label="Hold and speak">
+    <span class="ring"></span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 1 0-7 0v6A3.5 3.5 0 0 0 12 15Zm6-3.5a.9.9 0 1 0-1.8 0 4.2 4.2 0 0 1-8.4 0 .9.9 0 1 0-1.8 0 6 6 0 0 0 5.1 5.93V20H8.7a.9.9 0 1 0 0 1.8h6.6a.9.9 0 1 0 0-1.8H12.9v-2.57A6 6 0 0 0 18 11.5Z"/></svg>
+  </button>
+  <p id="micState" class="mic-state">Daba ke bolo</p>
+  <form id="typeForm" class="type-form" hidden>
+    <input id="typeInput" type="text" placeholder="Ramesh ka 340 udhaar" autocomplete="off" enterkeyhint="send">
+    <button type="submit">Send</button>
+  </form>
+  <nav class="tabs">
+    <button data-tab="bolo" class="on" type="button">Bolo</button>
+    <button data-tab="hisaab" type="button">Hisaab</button>
+    <button data-tab="khata" type="button">Khata</button>
+  </nav>
+</div>
+
+<div id="startSheet" class="sheet">
+  <div class="sheet-body">
+    <span class="logo big" aria-hidden="true">छो</span>
+    <h2>Namaste! Main Namma Chotu hoon.</h2>
+    <p>Main ek <strong>AI sahayak</strong> hoon. Aap bolo, main khata likhunga: udhaar, jama aur kiska kitna baaki hai.</p>
+    <p class="fine">Demo mein sirf banawati (synthetic) grahak hain. Aawaz ke transcript encrypted rehte hain aur judging ke baad delete kiye jaate hain.</p>
+    <p class="pick">Kis bhasha mein shuru karein? Beech mein kabhi bhi badal sakte hain.</p>
+    <div class="langs">
+      <button class="start" type="button" data-lang="hi">हिंदी</button>
+      <button class="start" type="button" data-lang="kn">ಕನ್ನಡ</button>
+      <button class="start alt" type="button" data-lang="en">English</button>
+    </div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>
