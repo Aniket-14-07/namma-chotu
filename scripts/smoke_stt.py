@@ -39,7 +39,7 @@ async def main():
                   f"(server latency {d.get('latency')} ms, {d.get('audio_duration_ms')} ms audio)")
             done.set()
         elif typ == "_connected":
-            print(f"  connected in {d.get('connect_ms')} ms, config: {json.dumps(d.get('config'), ensure_ascii=False)}")
+            print(f"  connected in {d.get('connect_ms')} ms, language_code used: {d.get('language_code')}, config: {json.dumps(d.get('config'), ensure_ascii=False)}")
         else:
             print(f"  event: {typ} {json.dumps({k: v for k, v in d.items() if k not in ('type', '_rx')}, ensure_ascii=False)[:200]}")
 

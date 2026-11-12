@@ -27,6 +27,7 @@ class FakeGnani:
         self.stt_headers: list[dict] = []
         self.tts_requests: list[dict] = []
         self.bad_frames = 0
+        self.accept_language_list = False   # live server (Nov 2026) rejects comma lists
         self.frames = 0
         self.commits = 0
         self.port = None
@@ -39,6 +40,13 @@ class FakeGnani:
         self.stt_headers.append(h)
         if not h.get("x-api-key-id"):
             await ws.close(1008, "no key")
+            return
+        lc = h.get("language_code") or ""
+        if "," in lc and not self.accept_language_list:
+            await ws.send(json.dumps({"type": "error", "message":
+                f"Invalid language_code: exactly one locale is required (e.g. hi-IN). Received: {lc}. "
+                "Use multi_lang_codes for parallel multi-locale transcription."}))
+            await ws.close(1008, "bad language_code")
             return
         await ws.send(json.dumps({"type": "connected", "timestamp": "t",
                                   "config": {"sample_rate": int(h.get("x-sample-rate", 16000)), "chunk_size": 512,

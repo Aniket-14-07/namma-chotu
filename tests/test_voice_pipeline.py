@@ -69,6 +69,8 @@ def test_full_voice_turn(client, fake):
     assert fake.bad_frames == 0 and fake.commits >= 1
     h = fake.stt_headers[-1]
     assert h["model"] == "prisma-v3.0" and h["format"] == "transcribe" and "ramesh" in h.get("keyterms", "").lower()
+    assert h["language_code"] == "indic-auto"       # list rejected -> fell back
+    assert "lang_code" not in h                      # legacy duplicate header no longer sent
     tts = fake.tts_requests[-1]
     assert tts["model"] == "timbre-v3.0" and tts["language"] == "hi-IN"
     assert tts["audio_config"]["container"] == "raw" and tts["audio_config"]["sample_rate"] == 16000
@@ -94,3 +96,10 @@ def test_typed_text_and_dashboard(client, fake):
     dash = client.get("/api/dashboard").json()
     assert dash["today_credit"] == 50000
     assert client.get("/api/health").json()["voice"] == "gnani"
+
+
+def test_language_candidates():
+    from app.gnani.stt import language_candidates
+    assert language_candidates("hi-IN, kn-IN,en-IN") == ["hi-IN,kn-IN,en-IN", "indic-auto", "hi-IN"]
+    assert language_candidates("indic-auto") == ["indic-auto"]
+    assert language_candidates("kn-IN") == ["kn-IN", "indic-auto"]
