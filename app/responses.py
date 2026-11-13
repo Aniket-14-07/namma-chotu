@@ -46,9 +46,19 @@ T: dict[str, dict[str, str]] = {
     "payment": {"hi": "जमा", "kn": "ಜಮಾ", "en": "payment"},
     "stop": {"hi": "। ", "kn": ". ", "en": ". "},
     "corrected": {"hi": "ठीक किया। ", "kn": "ಸರಿ ಮಾಡಿದೆ. ", "en": "Corrected. "},
-    "due": {"hi": "कुल बाकी {a}।", "kn": "ಒಟ್ಟು ಬಾಕಿ {a}.", "en": "Total due {a}."},
-    "nothing_due": {"hi": "अब कुछ बाकी नहीं।", "kn": "ಈಗ ಏನೂ ಬಾಕಿ ಇಲ್ಲ.", "en": "Nothing due now."},
-    "advance": {"hi": "{a} एडवांस है।", "kn": "{a} ಮುಂಗಡ ಇದೆ.", "en": "{a} in advance."},
+    "due": {"hi": "कुल {a} लेना है।", "kn": "ಒಟ್ಟು {a} ಬರಬೇಕು.", "en": "You'll get {a}."},
+    "nothing_due": {"hi": "अब हिसाब बराबर।", "kn": "ಈಗ ಲೆಕ್ಕ ಸರಿಸಮ.", "en": "All settled."},
+    "advance": {"hi": "आपको {a} देना है।", "kn": "ನೀವು {a} ಕೊಡಬೇಕು.", "en": "You owe {a}."},
+    "opt_gave": {"hi": "आपने दिया (उधार)", "kn": "ನೀವು ಕೊಟ್ಟಿದ್ದು (ಉದ್ರಿ)", "en": "You gave (credit)"},
+    "opt_got": {"hi": "आपको मिला (जमा)", "kn": "ನಿಮಗೆ ಬಂದದ್ದು (ಜಮಾ)", "en": "You got (payment)"},
+    "ask_kind": {"hi": "{name}, {a}: आपने दिया या आपको मिला?", "kn": "{name}, {a}: ನೀವು ಕೊಟ್ಟಿದ್ದಾ ಅಥವಾ ನಿಮಗೆ ಬಂತಾ?",
+                 "en": "{name}, {a}: did you give it, or did you get it?"},
+    "flip_to_owe": {"hi": "अभी {name} से {bal} लेना है। {a} {kind} लिखूँ? फिर आपको {name} को {adv} देना होगा।",
+                    "kn": "ಈಗ {name} ಅವರಿಂದ {bal} ಬರಬೇಕು. {a} {kind} ಬರೆಯಲೇ? ಆಮೇಲೆ ನೀವು {name} ಅವರಿಗೆ {adv} ಕೊಡಬೇಕು.",
+                    "en": "{name} owes you {bal} now. Record {a} {kind}? Then you will owe {name} {adv}."},
+    "flip_to_get": {"hi": "अभी आपको {name} को {bal} देना है। {a} {kind} लिखूँ? फिर {name} से {adv} लेना होगा।",
+                    "kn": "ಈಗ ನೀವು {name} ಅವರಿಗೆ {bal} ಕೊಡಬೇಕು. {a} {kind} ಬರೆಯಲೇ? ಆಮೇಲೆ {name} ಅವರಿಂದ {adv} ಬರಬೇಕು.",
+                    "en": "You owe {name} {bal} now. Record {a} {kind}? Then {name} will owe you {adv}."},
     "ask_which": {"hi": "कौन से {first}? {opts}?", "kn": "ಯಾವ {first}? {opts}?", "en": "Which {first}? {opts}?"},
     "or": {"hi": " या ", "kn": " ಅಥವಾ ", "en": " or "},
     "ask_new_customer": {"hi": "{name} नाम का कोई ग्राहक नहीं है। नया खाता बनाऊँ?",
@@ -94,9 +104,9 @@ T: dict[str, dict[str, str]] = {
     "reminder_zero": {"hi": "{name} का कोई बाकी नहीं है, याद-संदेश की ज़रूरत नहीं।",
                       "kn": "{name} ಅವರದು ಏನೂ ಬಾಕಿ ಇಲ್ಲ, ನೆನಪಿನ ಸಂದೇಶ ಬೇಕಿಲ್ಲ.",
                       "en": "{name} owes nothing, no reminder needed."},
-    "refuse_lending": {"hi": "माफ़ कीजिए, मैं ब्याज या लोन का हिसाब नहीं रखता। सिर्फ़ सामान का उधार और जमा लिखता हूँ।",
-                       "kn": "ಕ್ಷಮಿಸಿ, ನಾನು ಬಡ್ಡಿ ಅಥವಾ ಸಾಲದ ಲೆಕ್ಕ ಇಡುವುದಿಲ್ಲ. ಸಾಮಾನಿನ ಉದ್ರಿ ಮತ್ತು ಜಮಾ ಮಾತ್ರ ಬರೆಯುತ್ತೇನೆ.",
-                       "en": "Sorry, I don't handle interest or loans. I only record goods on credit and payments."},
+    "refuse_lending": {"hi": "माफ़ कीजिए, मैं ब्याज का हिसाब नहीं रखता। सिर्फ़ दिया और मिला लिखता हूँ।",
+                       "kn": "ಕ್ಷಮಿಸಿ, ನಾನು ಬಡ್ಡಿ ಲೆಕ್ಕ ಇಡುವುದಿಲ್ಲ. ಕೊಟ್ಟಿದ್ದು ಮತ್ತು ಬಂದದ್ದು ಮಾತ್ರ ಬರೆಯುತ್ತೇನೆ.",
+                       "en": "Sorry, I don't calculate interest. I only record what you gave and what you got."},
     "refuse_pressure": {"hi": "माफ़ कीजिए, मैं धमकी या दबाव वाला संदेश नहीं भेजता। चाहें तो एक विनम्र याद-संदेश बना सकता हूँ।",
                         "kn": "ಕ್ಷಮಿಸಿ, ನಾನು ಬೆದರಿಕೆ ಅಥವಾ ಒತ್ತಡದ ಸಂದೇಶ ಕಳಿಸುವುದಿಲ್ಲ. ಬೇಕಾದರೆ ವಿನಯದ ನೆನಪಿನ ಸಂದೇಶ ಮಾಡಬಹುದು.",
                         "en": "Sorry, I don't send threatening or pressuring messages. I can prepare a polite reminder instead."},
@@ -109,13 +119,13 @@ T: dict[str, dict[str, str]] = {
     "new_customer_created": {"hi": "नया खाता बना: {name}। ", "kn": "ಹೊಸ ಖಾತೆ: {name}. ", "en": "New account: {name}. "},
     "undo_done": {"hi": "{name} की {a} {kind} वाली एंट्री हटा दी। ", "kn": "{name} ಅವರ {a} {kind} ಎಂಟ್ರಿ ತೆಗೆದೆ. ",
                   "en": "Removed {name}'s {a} {kind} entry. "},
-    "balance_pos": {"hi": "{name} का कुल बाकी {a} है।", "kn": "{name} ಒಟ್ಟು ಬಾಕಿ {a}.", "en": "{name} owes {a} in total."},
-    "balance_zero": {"hi": "{name} का कोई बाकी नहीं है।", "kn": "{name} ಏನೂ ಬಾಕಿ ಇಲ್ಲ.", "en": "{name} owes nothing."},
-    "balance_neg": {"hi": "{name} का {a} एडवांस जमा है।", "kn": "{name} ಅವರದು {a} ಮುಂಗಡ ಇದೆ.", "en": "{name} has {a} in advance."},
-    "last_payment": {"hi": "{name} ने आख़िरी बार {d} {a} दिए थे।", "kn": "{name} ಕೊನೆಯದಾಗಿ {d} {a} ಕೊಟ್ಟಿದ್ದಾರೆ.",
-                     "en": "{name} last paid {a} on {d}."},
-    "last_credit": {"hi": "{name} का आख़िरी उधार {d} {a} था।", "kn": "{name} ಕೊನೆಯ ಉದ್ರಿ {d} {a}.",
-                    "en": "{name} last took credit of {a} on {d}."},
+    "balance_pos": {"hi": "{name} से कुल {a} लेना है।", "kn": "{name} ಅವರಿಂದ ಒಟ್ಟು {a} ಬರಬೇಕು.", "en": "{name} owes you {a}."},
+    "balance_zero": {"hi": "{name} का हिसाब बराबर है।", "kn": "{name} ಅವರ ಲೆಕ್ಕ ಸರಿಸಮ.", "en": "{name} is settled, nothing due either way."},
+    "balance_neg": {"hi": "आपको {name} को {a} देना है।", "kn": "ನೀವು {name} ಅವರಿಗೆ {a} ಕೊಡಬೇಕು.", "en": "You owe {name} {a}."},
+    "last_payment": {"hi": "{name} ने आख़िरी बार {d}{tm} {a} दिए थे।", "kn": "{name} ಕೊನೆಯದಾಗಿ {d}{tm} {a} ಕೊಟ್ಟಿದ್ದಾರೆ.",
+                     "en": "{name} last paid {a} on {d}{tm}."},
+    "last_credit": {"hi": "{name} का आख़िरी उधार {d}{tm} {a} था।", "kn": "{name} ಕೊನೆಯ ಉದ್ರಿ {d}{tm} {a}.",
+                    "en": "{name} last took credit of {a} on {d}{tm}."},
     "no_entries": {"hi": "{name} की कोई एंट्री नहीं है।", "kn": "{name} ಅವರ ಯಾವುದೇ ಎಂಟ್ರಿ ಇಲ್ಲ.", "en": "No entries for {name}."},
     "period_credit": {"hi": "{p} {a} उधार गया, {n} एंट्री।", "kn": "{p} {a} ಉದ್ರಿ ಹೋಗಿದೆ, {n} ಎಂಟ್ರಿ.",
                       "en": "{p}: {a} given on credit, {n} entries."},
@@ -123,10 +133,25 @@ T: dict[str, dict[str, str]] = {
                        "en": "{p}: {a} received, {n} entries."},
     "period_none": {"hi": "{p} कोई {kind} एंट्री नहीं हुई।", "kn": "{p} ಯಾವುದೇ {kind} ಎಂಟ್ರಿ ಇಲ್ಲ.",
                     "en": "{p}: no {kind} entries."},
-    "period_summary": {"hi": "{p} {a} उधार गया और {b} जमा हुए।", "kn": "{p} {a} ಉದ್ರಿ ಹೋಗಿದೆ, {b} ಜಮಾ ಆಗಿದೆ.",
-                       "en": "{p}: {a} on credit, {b} received."},
-    "outstanding": {"hi": "कुल {a} बाज़ार में बाकी है, {n} ग्राहकों पर।", "kn": "ಒಟ್ಟು {a} ಮಾರ್ಕೆಟ್‌ನಲ್ಲಿ ಬಾಕಿ ಇದೆ, {n} ಗ್ರಾಹಕರ ಮೇಲೆ.",
-                    "en": "Total {a} is pending with {n} customers."},
+    "period_summary": {"hi": "{p}: {a} उधार दिया, {b} जमा मिले, {n} एंट्री।", "kn": "{p}: {a} ಉದ್ರಿ ಕೊಟ್ಟಿದ್ದು, {b} ಜಮಾ ಬಂದಿದೆ, {n} ಎಂಟ್ರಿ.",
+                       "en": "{p}: you gave {a} on credit and got {b}, {n} entries."},
+    "outstanding": {"hi": "बाज़ार से कुल {a} लेना है, {n} ग्राहकों से।", "kn": "ಮಾರ್ಕೆಟ್‌ನಿಂದ ಒಟ್ಟು {a} ಬರಬೇಕು, {n} ಗ್ರಾಹಕರಿಂದ.",
+                    "en": "You'll get {a} in total from {n} customers."},
+    "alarm_set": {"hi": "ठीक है, {d} {tm} याद दिलाऊँगा: {x}", "kn": "ಸರಿ, {d} {tm} ನೆನಪಿಸುತ್ತೇನೆ: {x}",
+                  "en": "Okay, I'll remind you {d} at {tm}: {x}"},
+    "alarm_need_time": {"hi": "कब याद दिलाऊँ? समय बताइए, जैसे शाम 7 बजे।", "kn": "ಯಾವಾಗ ನೆನಪಿಸಲಿ? ಸಮಯ ಹೇಳಿ, ಉದಾ ಸಂಜೆ 7.",
+                        "en": "When should I remind you? Say a time, like 7 pm."},
+    "alarm_past": {"hi": "वो समय निकल चुका है। आगे का समय बताइए।", "kn": "ಆ ಸಮಯ ಮುಗಿದಿದೆ. ಮುಂದಿನ ಸಮಯ ಹೇಳಿ.",
+                   "en": "That time has already passed. Please say a later time."},
+    "alarm_fire": {"hi": "याद दिला रहा हूँ: {x}", "kn": "ನೆನಪಿಸುತ್ತಿದ್ದೇನೆ: {x}", "en": "Reminder: {x}"},
+    "closing_set": {"hi": "ठीक है, रोज़ {tm} दिन का हिसाब सुनाऊँगा।", "kn": "ಸರಿ, ಪ್ರತಿದಿನ {tm} ದಿನದ ಲೆಕ್ಕ ಹೇಳುತ್ತೇನೆ.",
+                    "en": "Okay, every day at {tm} I'll read out the day's summary."},
+    "closing_intro": {"hi": "दुकान बंद होने का समय। ", "kn": "ಅಂಗಡಿ ಮುಚ್ಚುವ ಸಮಯ. ", "en": "Closing time. "},
+    "market_both": {"hi": " कुल बाज़ार से {a} लेना है", "kn": " ಒಟ್ಟು ಮಾರ್ಕೆಟ್‌ನಿಂದ {a} ಬರಬೇಕು", "en": " In total you'll get {a}"},
+    "market_owe": {"hi": ", और आपको {b} देना है", "kn": ", ನೀವು {b} ಕೊಡಬೇಕು", "en": ", and you owe {b}"},
+    "last_entry_at": {"hi": "आख़िरी एंट्री {tm}।", "kn": "ಕೊನೆಯ ಎಂಟ್ರಿ {tm}.", "en": "Last entry at {tm}."},
+    "period_none_all": {"hi": "{p} कोई एंट्री नहीं हुई।", "kn": "{p} ಯಾವುದೇ ಎಂಟ್ರಿ ಇಲ್ಲ.", "en": "{p}: no entries."},
+    "owe_total": {"hi": " आपको {m} लोगों को {b} देना है।", "kn": " ನೀವು {m} ಜನರಿಗೆ {b} ಕೊಡಬೇಕು.", "en": " You owe {b} to {m} people."},
     "top_none": {"hi": "किसी पर उधार बाकी नहीं है।", "kn": "ಯಾರ ಮೇಲೂ ಉದ್ರಿ ಬಾಕಿ ಇಲ್ಲ.", "en": "Nobody owes anything."},
     "top_one": {"hi": "सबसे ज़्यादा उधार {name} पर है, {a}।", "kn": "ಅತಿ ಹೆಚ್ಚು ಉದ್ರಿ {name} ಮೇಲೆ, {a}.",
                 "en": "{name} owes the most, {a}."},
@@ -278,9 +303,16 @@ def ask_confirm(cust_name: str, amount: int, kind: str, d: date, lang: str) -> l
 
 
 def ask_overpay(cust_name: str, bal: int, amount: int, lang: str) -> list[Part]:
-    if bal <= 0:
-        return fill("overpay_zero", lang, name=cust_name, a=Amt(amount))
-    return fill("overpay", lang, name=cust_name, bal=Amt(bal), a=Amt(amount), adv=Amt(amount - bal))
+    return ask_flip(cust_name, bal, bal - amount, amount, "PAYMENT", lang)
+
+
+def ask_flip(cust_name: str, bal: int, new: int, amount: int, kind: str, lang: str) -> list[Part]:
+    key = "flip_to_owe" if bal > 0 else "flip_to_get"
+    return fill(key, lang, name=cust_name, bal=Amt(abs(bal)), a=Amt(amount), kind=kind_word(kind, lang), adv=Amt(abs(new)))
+
+
+def ask_kind(cust_name: str, amount: int, lang: str) -> list[Part]:
+    return fill("ask_kind", lang, name=cust_name, a=Amt(amount))
 
 
 def simple(key: str, lang: str, **kw) -> list[Part]:
@@ -308,12 +340,46 @@ def balance(cust, bal: int, lang: str) -> list[Part]:
     return fill("balance_neg", lang, name=n, a=Amt(-bal))
 
 
+_TOD = {"hi": ("सुबह", "दोपहर", "शाम", "रात"), "kn": ("ಬೆಳಿಗ್ಗೆ", "ಮಧ್ಯಾಹ್ನ", "ಸಂಜೆ", "ರಾತ್ರಿ")}
+
+
+def time_word(hhmm: str | None, lang: str) -> str:
+    """'17:10' -> 'शाम 5:10' / 'ಸಂಜೆ 5:10' / '5:10 PM'."""
+    if not hhmm:
+        return ""
+    h, m = (int(x) for x in hhmm.split(":")[:2])
+    h12 = h % 12 or 12
+    clock = f"{h12}:{m:02d}" if m else f"{h12}"
+    lg = L(lang)
+    if lg == "en":
+        return f"{h12}:{m:02d} {'AM' if h < 12 else 'PM'}"
+    tod = _TOD[lg][0 if 4 <= h < 12 else 1 if 12 <= h < 16 else 2 if 16 <= h < 20 else 3]
+    return f"{tod} {clock}" + (" बजे" if lg == "hi" else "")
+
+
 def last_txn(cust, txn, kind: str | None, lang: str) -> list[Part]:
     n = name_for(cust, lang)
     if txn is None:
         return fill("no_entries", lang, name=n)
     key = "last_payment" if txn.kind == "PAYMENT" else "last_credit"
-    return fill(key, lang, name=n, d=Day(date.fromisoformat(txn.txn_date)), a=Amt(txn.amount_paise))
+    tm = (" " + time_word(txn.txn_time, lang)) if txn.txn_time else ""
+    if tm and L(lang) == "en":
+        tm = " at" + tm
+    return fill(key, lang, name=n, d=Day(date.fromisoformat(txn.txn_date)), a=Amt(txn.amount_paise), tm=tm)
+
+
+def closing_summary(label, start, credit: int, paid: int, n: int, get: int, owe: int, last_time: str | None,
+                    lang: str, intro: bool = False) -> list[Part]:
+    """End-of-day overview: the day's gave/got, then where the whole market stands."""
+    parts: list[Part] = [t("closing_intro", lang)] if intro else []
+    parts += period_summary(label, start, credit, paid, lang, n)
+    parts += fill("market_both", lang, a=Amt(get))
+    if owe:
+        parts += fill("market_owe", lang, b=Amt(owe))
+    parts.append(t("stop", lang).rstrip() if L(lang) != "en" else ".")
+    if last_time and n:
+        parts += [" "] + fill("last_entry_at", lang, tm=time_word(last_time, lang))
+    return parts
 
 
 def period_sum(kind: str, label, start, total: int, count: int, lang: str) -> list[Part]:
@@ -324,12 +390,18 @@ def period_sum(kind: str, label, start, total: int, count: int, lang: str) -> li
     return fill(key, lang, p=p, a=Amt(total), n=count)
 
 
-def period_summary(label, start, credit: int, paid: int, lang: str) -> list[Part]:
-    return fill("period_summary", lang, p=period_word(label, start, lang), a=Amt(credit), b=Amt(paid))
+def period_summary(label, start, credit: int, paid: int, lang: str, n: int = 0) -> list[Part]:
+    p = period_word(label, start, lang)
+    if n == 0 and credit == 0 and paid == 0:
+        return fill("period_none_all", lang, p=p)
+    return fill("period_summary", lang, p=p, a=Amt(credit), b=Amt(paid), n=n)
 
 
-def total_outstanding(total: int, n: int, lang: str) -> list[Part]:
-    return fill("outstanding", lang, a=Amt(total), n=n)
+def total_outstanding(total: int, n: int, lang: str, owe: int = 0, m: int = 0) -> list[Part]:
+    parts = fill("outstanding", lang, a=Amt(total), n=n)
+    if owe:
+        parts += fill("owe_total", lang, b=Amt(owe), m=m)
+    return parts
 
 
 def top_debtors(items: list, lang: str) -> list[Part]:

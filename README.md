@@ -5,6 +5,10 @@
 - **Speech:** Gnani **Prisma v3.0** (streaming STT, WebSocket) and Gnani **Timbre v3.0** (streaming TTS, WebSocket)
 - **Orchestration:** custom asyncio orchestrator (no hosted agent platform in the loop)
 - **Brain:** an LLM (Groq `openai/gpt-oss-20b` by default, or xAI Grok; any OpenAI-compatible API) turns free speech plus the conversation so far into structured commands: credit, payment, loan, correction, undo, new customer, rename, questions. A deterministic ledger engine does all the money maths. No LLM ever touches a balance, and an amount the LLM "heard" that our own number parser didn't is confirmed out loud before it's written. If the LLM is slow or down, the rule parser takes the turn.
+- **Money logic:** every entry is "you gave" (customer owes you more) or "you got" (owes you less / you owe them). Each person has one balance shown as *Lena hai ₹X* or *Dena hai ₹X*. The bare words "credit"/"debit" are never guessed: Chotu asks. A balance that would flip sides is always confirmed first.
+- **Time:** every entry is stamped with its time; "shaam 5 baje" sets it explicitly. Summaries work for any day ("kal ka hisaab", "12 tareekh ka hisaab"), and Hisaab shows today and yesterday.
+- **Reminders:** "mujhe shaam 7 baje yaad dilana …" (spoken + pop-up while the app is open), a daily closing summary at a set time, and polite WhatsApp reminders to customers.
+- **"Hey Chotu":** on-device wake word (Picovoice Porcupine), one command per wake with a loudness gate against background voices, then an 8 s follow-up window.
 - **Storage:** SQLite on a laptop, Postgres when hosted (data survives restarts). Customer names, phones and transcripts are encrypted at rest.
 - **Languages:** Hindi, Kannada and English, mixed freely in one sentence ("Ramesh ka munnooru nalavattu udhaar"). Replies come in the shopkeeper's language and script. Other Indic languages go to the optional LLM fallback.
 - **Device:** any browser, including low-end Android Chrome. Plain HTML/JS with no build step; push-to-talk or hands-free.

@@ -11,11 +11,29 @@ def _keys(words: str) -> frozenset[str]:
     return frozenset(pkey(w) for w in words.split())
 
 
-CREDIT_STRONG = _keys("udhaar udhar udhaari udhari udhaarr baaki baki bakaya credit due dues "
+CREDIT_STRONG = _keys("udhaar udhar udhaari udhari udhaarr baaki baki bakaya due dues "
                       "khata khate khaate udri udhri udhaara saala")
 CREDIT_WEAK = _keys("likh likho likhna likhdo likhiye likhe likha daal daalo dal dalo daaldo add jod jodo "
                     "jodna joddo chadha chadhao chadhana charge saaman saman samaan "
-                    "maal kharida kharide khareeda kharidi bari bariri bareyiri barko barkoli barkolli haaku haaki haakbidi haakri seri serisi")
+                    "maal kharida kharide khareeda kharidi bari bariri bareyiri barko barkoli barkolli haaku haaki haakbidi haakri seri serisi "
+                    "shopping kharidari khareedari purchase bought")
+# "credit"/"debit" mean opposite things to different people (shop vs bank): never guess, ask.
+AMBIG_DIRECTION = _keys("credit credited credits debit debited debits")
+# obligations ("... dena hai"): the direction depends on WHO has to give
+OBLIG_GIVE = _keys("dena dene deni denaa kodbeku kodabeku kodbekide kodbekagide kodbeka")
+OBLIG_TAKE = _keys("lena lene leni lenaa")
+OBLIG_COME = _keys("barbeku barabeku barbekide")        # Kannada: (money) has to come to me
+FIRST_PERSON = _keys("mujhe mujhko maine main mai hame hamein humein humko hamko humne hamne "
+                     "naanu nanu naavu nanage nange namge namage")
+BAJE = _keys("baje baj bajey bajay bajke gante ganta oclock clock pm am gantege gantekke")
+MORNING = _keys("subah subha savere sawere morning belagge beligge")
+NOON = _keys("dopahar dopehar afternoon madhyahna")
+EVENING = _keys("shaam sham evening sanje")
+NIGHT = _keys("raat rat night ratri")
+OWE = _keys("owe owes owed")
+FIRST_PERSON_EN = _keys("i we me us")
+PRON_KO = _keys("isko usko inko unko isku usku inku unku")
+PRON_SE = _keys("isse usse inse unse issey ussey")
 TAKE_VERB = _keys("liya liye li le lena lekar liyaa took taken tagondru togondru tegedukondru tagondu togondu tagondidaare togondidaare kondru kondukondru tagonda togonda")
 PAYMENT_STRONG = _keys("jama payment paid pay paying received receive recieved recive mila mile mili "
                        "chukaya chukaye chukayi chuka chukta wapas vapas lautaya lautaye lautayi bhara bhare "
@@ -84,7 +102,7 @@ NAME_SUFFIXES = [
 ]
 
 # Guardrails
-LENDING = _keys("byaaj byaj biyaj interest sood soodh loan baddi badi emi karza karz")
+LENDING = _keys("byaaj byaj biyaj interest sood soodh baddi emi")   # interest is refused; a plain loan is just "you gave"
 THREAT = _keys("police dhamki warna varna court legal maarunga marunga beizzati bezzati insult jail thana "
                "bedarike")
 WAKE = _keys("chotu chhotu chotuu chhotuu chottu")

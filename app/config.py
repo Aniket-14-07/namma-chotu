@@ -29,7 +29,11 @@ class Settings:
     # Up to 4 hints for prisma-v3.0, or "indic-auto".
     stt_languages: str = field(default_factory=lambda: os.getenv("GNANI_STT_LANGUAGES", "hi-IN,kn-IN,en-IN"))
     stt_format: str = field(default_factory=lambda: os.getenv("GNANI_STT_FORMAT", "transcribe"))
-    vad_threshold: str = field(default_factory=lambda: os.getenv("GNANI_VAD_THRESHOLD", "0.6"))
+    # stricter speech detection ignores more background chatter (0..1, higher = needs clearer speech)
+    vad_threshold: str = field(default_factory=lambda: os.getenv("GNANI_VAD_THRESHOLD", "0.75"))
+    # "Hey Chotu" wake word (Picovoice Porcupine, runs on the phone). Put the .ppn in web/wake/.
+    picovoice_access_key: str = field(default_factory=lambda: os.getenv("PICOVOICE_ACCESS_KEY", ""))
+    wake_sensitivity: float = field(default_factory=lambda: float(os.getenv("WAKE_SENSITIVITY", "0.6")))
     min_silence_ms: str = field(default_factory=lambda: os.getenv("GNANI_MIN_SILENCE_MS", "400"))
 
     tts_url: str = field(default_factory=lambda: os.getenv("GNANI_TTS_URL", "wss://api.vachana.ai/api/v1/tts"))
@@ -44,6 +48,7 @@ class Settings:
     llm_model: str = field(default_factory=lambda: os.getenv("LLM_MODEL", ""))
     llm_timeout_s: float = field(default_factory=lambda: float(os.getenv("LLM_TIMEOUT_S", "3")))
     # "llm" = LLM understands every turn (rule parser is the fallback). "rules" = rules first, LLM only if lost.
+    closing_time: str = field(default_factory=lambda: os.getenv("CLOSING_TIME", "21:00"))   # daily summary, IST
     nlu_mode: str = field(default_factory=lambda: os.getenv("NLU_MODE", "llm"))
 
     # DATABASE_URL (Postgres) wins: data survives restarts and redeploys on free hosting.

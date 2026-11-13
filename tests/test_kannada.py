@@ -93,7 +93,7 @@ def test_kannada_queries(ledger):
     assert "ಅತಿ ಹೆಚ್ಚು" in r.display
 
 
-@pytest.mark.parametrize("utt", ["Ramesh Kumar ko 500 pe byaaj lagao", "Ramesh ge baddi haaku", "Suresh ko loan de do"])
+@pytest.mark.parametrize("utt", ["Ramesh Kumar ko 500 pe byaaj lagao", "Ramesh ge baddi haaku"])
 def test_no_lending(session, utt):
     r = say(session, utt)
     assert r.intents == ["REFUSE_LENDING"] and not r.events

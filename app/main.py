@@ -111,6 +111,54 @@ def add_customer(body: NewCustomer):
     return L().customer_summary(c.id)
 
 
+@app.get("/api/alarms")
+def list_alarms():
+    return L().alarms()
+
+
+@app.delete("/api/alarms/{aid}")
+def cancel_alarm(aid: int):
+    if not L().finish_alarm(aid, "cancelled"):
+        raise HTTPException(404)
+    return {"ok": True}
+
+
+class AppSettings(BaseModel):
+    closing_time: str | None = None
+    closing_on: bool | None = None
+
+
+@app.get("/api/settings")
+def get_settings():
+    led = L()
+    return {"closing_time": led.get_setting("closing_time", settings.closing_time),
+            "closing_on": led.get_setting("closing_on", "1") == "1"}
+
+
+@app.post("/api/settings")
+def set_settings(body: AppSettings):
+    led = L()
+    if body.closing_time is not None:
+        try:
+            h, m = (int(x) for x in body.closing_time.split(":"))
+            assert 0 <= h < 24 and 0 <= m < 60
+        except Exception:
+            raise HTTPException(400, "time must be HH:MM")
+        led.set_setting("closing_time", f"{h:02d}:{m:02d}")
+    if body.closing_on is not None:
+        led.set_setting("closing_on", "1" if body.closing_on else "0")
+    return get_settings()
+
+
+@app.get("/api/day/{d}")
+def day_report(d: str):
+    from datetime import date
+    try:
+        return L().day_report(date.fromisoformat(d))
+    except ValueError:
+        raise HTTPException(400, "date must be YYYY-MM-DD")
+
+
 class EditCustomer(BaseModel):
     name: str | None = None
     phone: str | None = None

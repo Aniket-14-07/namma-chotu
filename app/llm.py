@@ -32,7 +32,7 @@ from .timeutil import month_start, today_ist, week_start
 log = logging.getLogger("llm")
 
 INTENTS = {"TXN", "QUERY", "CORRECTION", "UNDO", "YES", "NO", "ADD_CUSTOMER", "RENAME_CUSTOMER",
-           "GREETING", "FUTURE", "REMINDER", "UNKNOWN"}
+           "GREETING", "FUTURE", "REMINDER", "SET_ALARM", "CLOSING_TIME", "UNKNOWN"}
 QUERIES = {"BALANCE", "LAST_PAYMENT", "LAST_CREDIT", "PERIOD_CREDIT", "PERIOD_PAYMENTS", "PERIOD_SUMMARY",
            "TOTAL_OUTSTANDING", "TOP_DEBTORS", "CUSTOMER_COUNT"}
 
@@ -43,12 +43,17 @@ answers to the assistant's last question, and follow-ups like "aur 200".
 
 Return ONLY this JSON:
 {"commands":[{
- "intent": "TXN|QUERY|CORRECTION|UNDO|YES|NO|ADD_CUSTOMER|RENAME_CUSTOMER|GREETING|FUTURE|REMINDER|UNKNOWN",
- "customer": string|null,        // customer name in Latin letters as spoken; null if not said
+ "intent": "TXN|QUERY|CORRECTION|UNDO|YES|NO|ADD_CUSTOMER|RENAME_CUSTOMER|GREETING|FUTURE|REMINDER|SET_ALARM|CLOSING_TIME|UNKNOWN",
+ "customer": string|null,        // customer name (Latin letters); null if not said
+ "heard_name": string|null,      // the name as literally heard in the utterance
  "customer_ref": "named|previous|none",  // previous = pronoun / the customer just discussed
  "kind": "CREDIT|PAYMENT"|null,
  "amount_rupees": number|null,   // never invent; null if no amount was said
  "days_ago": integer|null,       // kal (past) = 1, parso = 2, ninne = 1; null = today
+ "date": "YYYY-MM-DD"|null,      // a specific calendar date that was said ("12 November", "Monday ka")
+ "time": "HH:MM"|null,           // 24h clock time said for the entry ("shaam 5 baje" = "17:00"); null if not said
+ "alarm_at": "YYYY-MM-DDTHH:MM"|null, // SET_ALARM: when to remind (for reminders "kal" = tomorrow)
+ "alarm_text": string|null,      // SET_ALARM: what to remind about, short, in the shopkeeper's language
  "query": "BALANCE|LAST_PAYMENT|LAST_CREDIT|PERIOD_CREDIT|PERIOD_PAYMENTS|PERIOD_SUMMARY|TOTAL_OUTSTANDING|TOP_DEBTORS|CUSTOMER_COUNT"|null,
  "period": "today|yesterday|this_week|this_month"|null,
  "new_name": string|null,        // ADD_CUSTOMER / RENAME_CUSTOMER: the correct full name, Latin letters, Title Case
@@ -57,24 +62,40 @@ Return ONLY this JSON:
  "new_amount_rupees": number|null // CORRECTION: the corrected amount
 }]}
 
-Meaning of kind (from the SHOP's point of view; balance = what the customer owes the shop):
-- CREDIT: customer took goods on credit / udhaar / baaki / "likh do" / ಉದ್ರಿ / "khate mein daalo",
-  OR the shop lent cash / loan / "paise diye" TO the customer ("Ramesh ko 500 diye", "loan diya").
-- PAYMENT: customer paid / jama / wapas kiya / "Ramesh ne 500 diye" / ಕೊಟ್ಟರು / ಜಮಾ / "received" / advance deposited by customer.
-- Hindi "ko diya" = shop gave -> CREDIT. "ne diya" = customer gave -> PAYMENT. Kannada "avrige kotte" = CREDIT, "avru kottru" = PAYMENT.
-- If the direction is truly unclear, use CREDIT for "udhaar"-like words; otherwise CREDIT and the app will confirm.
+Meaning of kind. Think "WHO OWES WHOM after this sentence", from the shopkeeper's side (do not match keywords):
+- CREDIT = "you gave": the customer now owes the shop MORE (or the shop owes them less).
+  Goods on credit / udhaar / baaki / "likh do" / ಉದ್ರಿ / shopping on account / cash or loan given TO the customer /
+  any statement that the CUSTOMER has to pay: "isko 500 dena hai" (he has to give), "iska 500 udhaar bacha hai",
+  "isne 500 ki shopping kari", "isse 500 lena hai" (I have to collect), "Suresh owes 500", "avru 500 kodbeku", "500 barbeku".
+- PAYMENT = "you got": the customer now owes LESS (or the shop owes them more).
+  Customer paid / jama / wapas / GPay / "ne 500 diye" / advance deposited / ಕೊಟ್ಟರು / ಜಮಾ /
+  any statement that the SHOPKEEPER has to pay: "MUJHE isko 500 dena hai", "maine isko 500 dene hain",
+  "isko 500 lena hai" (he has to collect from me), "I owe Suresh 500", "naanu avrige 500 kodbeku".
+- "dena hai / kodbeku" without mujhe/maine/naanu/I = the CUSTOMER must pay (CREDIT). With them = the SHOPKEEPER must pay (PAYMENT).
+- The words "credit" / "debit" / "credited" alone are AMBIGUOUS (shop meaning vs bank meaning): set kind null.
+  Also set kind null whenever you cannot tell who gave to whom. Never guess the direction; the app will ask.
+
+Names:
+- "customer": the existing customer this refers to (fix STT misspellings ONLY if clearly the same person, e.g. "Rames Kumaar" -> "Ramesh Kumar").
+- "heard_name": the name exactly as it appears in the utterance (Latin letters), or null. Never replace a NEW name with a different known one:
+  if "Aniket" is said and only "Ankit"/"Amit" exist, customer = "Aniket" (a new person), not Ankit.
 
 Other rules:
 - "Kitna baaki hai / eshtu baaki / how much does X owe" = QUERY BALANCE. "Aaj ka hisaab / sales / ವ್ಯಾಪಾರ / summary" = QUERY PERIOD_SUMMARY (period today unless said).
   "Total kitna udhaar hai bazaar mein" = TOTAL_OUTSTANDING. "Sabse zyada kiska baaki" = TOP_DEBTORS.
 - "Nahi, 430 tha / galat, 340 nahi 430" = CORRECTION with new_amount_rupees. "Hata do / cancel / undo / ತೆಗೆ" = UNDO.
 - "Naya customer / naya khata / add karo <name>" = ADD_CUSTOMER with new_name.
+- REMINDER = a polite payment reminder to SEND TO A CUSTOMER ("Ramesh ko yaad dila do", "remind Ramesh").
+- SET_ALARM = remind the SHOPKEEPER himself at a time ("mujhe shaam 7 baje yaad dilana ki Ramesh se paise lene hain",
+  "kal subah 10 baje doodh wale ko call karna yaad dilana"). Fill alarm_at and alarm_text.
+- CLOSING_TIME = set the daily end-of-day summary time ("roz raat 9 baje hisaab sunana", "dukaan 10 baje band hoti hai"): put it in "time".
+- "Aaj ka hisaab / din ka summary / dukaan band, hisaab batao / kal ka hisaab / 12 tareekh ka hisaab" = QUERY PERIOD_SUMMARY
+  with period or date (or days_ago).
 - "<X> ka naam <Y> karo / spelling galat hai, <Y> likho / naam badlo" = RENAME_CUSTOMER: customer = X (or previous), new_name = Y.
 - When the assistant just asked a yes/no question: haan/ha/ಹೌದು/sari/ok/yes = YES; nahi/ಇಲ್ಲ/beda/no = NO.
 - When the assistant just asked for a name or amount, a bare name or number answers it (TXN with only that field).
 - When the assistant asked "open a new account for X?" and the shopkeeper says a different/corrected name, return ADD_CUSTOMER with new_name = corrected name.
 - Future promise ("kal dega", "will pay tomorrow") = FUTURE. Hello/namaste = GREETING. Anything else = UNKNOWN.
-- Match spoken names to the known customer list when they clearly refer to one (fix STT misspellings, e.g. "Rames Kumaar" -> "Ramesh Kumar").
 - Several actions in one sentence -> several commands, in order."""
 
 
@@ -95,8 +116,10 @@ async def extract(text: str, customers, *, history: list[tuple[str, str]] | None
     if not settings.llm_enabled:
         return None
     names = ", ".join(c.name for c in customers)[:3000]
-    user = (f"Known customers: {names or '(none yet)'}\n{_ctx_lines(history or [], last_customer, pending)}\n\n"
-            f"LATEST utterance: {text}")
+    from .timeutil import now_ist
+    now = now_ist()
+    user = (f"Now: {now.strftime('%A %Y-%m-%d %H:%M')} (IST)\nKnown customers: {names or '(none yet)'}\n"
+            f"{_ctx_lines(history or [], last_customer, pending)}\n\nLATEST utterance: {text}")
     body = {
         "model": settings.llm_model,
         "temperature": 0,
@@ -123,6 +146,34 @@ async def extract(text: str, customers, *, history: list[tuple[str, str]] | None
     return to_clauses(text, raw, customers)
 
 
+def _hhmm(v) -> str | None:
+    if not isinstance(v, str):
+        return None
+    try:
+        h, m = (int(x) for x in v.strip().split(":")[:2])
+    except ValueError:
+        return None
+    return f"{h:02d}:{m:02d}" if 0 <= h < 24 and 0 <= m < 60 else None
+
+
+def _date(v):
+    from datetime import date
+    try:
+        return date.fromisoformat(str(v)[:10]) if v else None
+    except ValueError:
+        return None
+
+
+def _datetime(v):
+    from datetime import datetime
+    from .timeutil import IST
+    try:
+        d = datetime.fromisoformat(str(v)) if v else None
+    except ValueError:
+        return None
+    return d.replace(tzinfo=IST) if d and d.tzinfo is None else d
+
+
 def _num(v) -> float | None:
     if isinstance(v, str):
         try:
@@ -142,6 +193,21 @@ def _mention(name: str | None, customers) -> Mention | None:
     return Mention(0, 0, [], 0.0, known=False, surface=str(name).strip())
 
 
+def _safe_mention(chosen: str | None, heard: str | None, toks: list[str], customers) -> Mention | None:
+    """The LLM may 'correct' a new name into an existing customer. Only accept its pick if our own
+    matcher also hears that customer in the heard name (or the sentence); otherwise treat it as a new name."""
+    m = _mention(chosen, customers)
+    if m is None or not m.known:
+        return m if heard is None else (_mention(heard, customers) or m)
+    heard_ms = [x for x in find_mentions(tokenize(heard), customers) if x.known] if heard else \
+        [x for x in find_mentions(toks, customers) if x.known]
+    if any(set(x.candidates) & set(m.candidates) for x in heard_ms):
+        return m
+    if heard:
+        return _mention(heard, customers)          # e.g. "Aniket" stays Aniket -> "naya khata?"
+    return m if not toks else Mention(0, 0, [], 0.0, known=False, surface=str(chosen))
+
+
 def to_clauses(text: str, raw: list[dict], customers) -> list[Clause]:
     toks = tokenize(text)
     spoken = {s.paise for s in find_numbers(toks)}
@@ -155,30 +221,36 @@ def to_clauses(text: str, raw: list[dict], customers) -> list[Clause]:
             intent = "UNKNOWN"
         c = Clause(intent=intent, tokens=toks)
         if item.get("customer_ref") != "previous":
-            c.mention = _mention(item.get("customer"), customers)
+            c.mention = _safe_mention(item.get("customer"), item.get("heard_name"), toks, customers)
         amt = _num(item.get("amount_rupees"))
         c.amount = int(round(amt * 100)) if amt else None
         kind = str(item.get("kind") or "").upper()
         c.kind = kind if kind in ("CREDIT", "PAYMENT") else None
         c.kind_explicit = c.kind is not None
         days = item.get("days_ago")
-        if isinstance(days, int) and 0 < days < 60:
+        said_date = _date(item.get("date"))
+        if said_date and said_date <= today:
+            c.date, c.date_explicit = said_date, True
+        elif isinstance(days, int) and 0 < days < 60:
             c.date, c.date_explicit = today - timedelta(days=days), True
         else:
             c.date = today
+        c.txn_time = _hhmm(item.get("time"))
         c.new_name = (item.get("new_name") or "").strip() or None
         c.name_hi = (item.get("name_hi") or "").strip() or None
         phone = "".join(ch for ch in str(item.get("phone") or "") if ch.isdigit())
         c.phone = phone if 8 <= len(phone) <= 13 else None
         if intent == "TXN":
-            c.kind = c.kind or "CREDIT"
+            # kind None -> the dialogue asks "aapne diya ya aapko mila?" instead of guessing
             # trust the amount only if our own parser heard the same number
             c.confidence = 0.95 if c.amount in spoken else 0.6
         elif intent == "QUERY":
             q = str(item.get("query") or "BALANCE").upper()
             c.query = q if q in QUERIES else "BALANCE"
             per = item.get("period")
-            if per == "yesterday":
+            if c.date_explicit and c.date != today:
+                c.period, c.period_label = (c.date, c.date), None
+            elif per == "yesterday":
                 y = today - timedelta(days=1)
                 c.period, c.period_label = (y, y), "yesterday"
             elif per == "this_week":
@@ -195,6 +267,11 @@ def to_clauses(text: str, raw: list[dict], customers) -> list[Clause]:
             c.new_mention = c.mention if (c.mention and not c.new_amount) else None
             c.mention = None if c.new_mention else c.mention
             c.new_kind = None
+        elif intent == "SET_ALARM":
+            c.alarm_at = _datetime(item.get("alarm_at"))
+            c.alarm_text = (item.get("alarm_text") or "").strip() or text
+        elif intent == "CLOSING_TIME":
+            c.closing_time = c.txn_time
         elif intent == "RENAME_CUSTOMER":
             c.new_name = c.new_name and " ".join(w.capitalize() for w in c.new_name.split())
         out.append(c)

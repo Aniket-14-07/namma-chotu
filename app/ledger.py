@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, timedelta
 
 from .db import Database
 from .nlu.romanize import pkey, romanize
@@ -42,6 +42,7 @@ class Txn:
     created_at: str
     status: str
     replaces: int | None = None
+    txn_time: str | None = None      # "HH:MM" IST, when known
 
 
 def _aliases(name: str, name_hi: str | None) -> dict[str, str]:
@@ -160,7 +161,7 @@ class Ledger:
     def record(self, customer_id: int, kind: str, amount_paise: int, txn_date: date | None = None, *,
                session_id: str | None = None, utterance_id: str | None = None,
                confidence: float | None = None, note: str | None = None, source: str = "voice",
-               replaces: int | None = None) -> Txn:
+               replaces: int | None = None, txn_time: str | None = None) -> Txn:
         if kind not in ("CREDIT", "PAYMENT"):
             raise ValueError(f"bad kind {kind}")
         if amount_paise <= 0:
@@ -168,13 +169,16 @@ class Ledger:
         if customer_id not in self._customers:
             raise KeyError(customer_id)
         d = (txn_date or today_ist()).isoformat()
-        created = now_ist().isoformat()
+        now = now_ist()
+        created = now.isoformat()
+        if txn_time is None and d == now.date().isoformat():
+            txn_time = now.strftime("%H:%M")          # said today without a time -> stamp it now
         with self.db.transaction() as db:
             cur = db.conn.execute(
                 "INSERT INTO transactions(customer_id,kind,amount_paise,txn_date,created_at,source,session_id,"
-                "utterance_id,confidence,note_enc,replaces) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                "utterance_id,confidence,note_enc,replaces,txn_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                 (customer_id, kind, amount_paise, d, created, source, session_id, utterance_id, confidence,
-                 db.crypto.enc(note), replaces),
+                 db.crypto.enc(note), replaces, txn_time),
             )
             tid = cur.lastrowid
             if replaces:
@@ -194,7 +198,7 @@ class Ledger:
         return self.record(
             customer_id or old.customer_id, kind or old.kind, amount_paise or old.amount_paise,
             txn_date or date.fromisoformat(old.txn_date), session_id=session_id, replaces=txn_id,
-            source="voice-correction",
+            source="voice-correction", txn_time=old.txn_time if not txn_date else None,
         )
 
     def void(self, txn_id: int, reason: str = "undo", session_id: str | None = None) -> Txn:
@@ -211,7 +215,8 @@ class Ledger:
         if r is None:
             raise KeyError(tid)
         return Txn(id=r["id"], customer_id=r["customer_id"], kind=r["kind"], amount_paise=r["amount_paise"],
-                   txn_date=r["txn_date"], created_at=r["created_at"], status=r["status"], replaces=r["replaces"])
+                   txn_date=r["txn_date"], created_at=r["created_at"], status=r["status"], replaces=r["replaces"],
+                   txn_time=r["txn_time"])
 
     # ------------------------------------------------------------------ queries
     def balance(self, cid: int) -> int:
@@ -269,7 +274,63 @@ class Ledger:
             "kind": r["kind"], "amount_paise": r["amount_paise"], "txn_date": r["txn_date"],
             "created_at": r["created_at"], "status": r["status"], "void_reason": r["void_reason"],
             "replaces": r["replaces"], "replaced_by": r["replaced_by"], "source": r["source"],
+            "txn_time": r["txn_time"],
         }
+
+    def day_txns(self, d: date, limit: int = 100) -> list[dict]:
+        """Active entries of one day, in time order."""
+        rows = self.db.query(
+            "SELECT * FROM transactions WHERE txn_date=? AND status='active' ORDER BY COALESCE(txn_time,'99:99'), id LIMIT ?",
+            (d.isoformat(), limit))
+        return [self._row_dict(r) for r in rows]
+
+    def total_owed_by_shop(self) -> tuple[int, int]:
+        neg = [-b for b in self.balances().values() if b < 0]
+        return sum(neg), len(neg)
+
+    def day_report(self, d: date) -> dict:
+        credit, ncredit = self.sum_kind("CREDIT", d, d)
+        paid, npaid = self.sum_kind("PAYMENT", d, d)
+        return {"date": d.isoformat(), "credit": credit, "credit_count": ncredit, "payments": paid,
+                "payments_count": npaid, "entries": self.day_txns(d)}
+
+    # ------------------------------------------------------------------ settings
+    def get_setting(self, key: str, default: str | None = None) -> str | None:
+        r = self.db.one("SELECT value FROM app_settings WHERE key=?", (key,))
+        return r["value"] if r else default
+
+    def set_setting(self, key: str, value: str) -> None:
+        with self.db.transaction() as db:
+            db.conn.execute("DELETE FROM app_settings WHERE key=?", (key,))
+            db.conn.execute("INSERT INTO app_settings(key,value) VALUES(?,?)", (key, value))
+
+    # -------------------------------------------------------------------- alarms
+    def add_alarm(self, due_at: datetime, text: str, customer_id: int | None = None,
+                  session_id: str | None = None) -> int:
+        with self.db.transaction() as db:
+            cur = db.conn.execute(
+                "INSERT INTO alarms(due_at,text_enc,customer_id,status,created_at) VALUES(?,?,?,'pending',?)",
+                (due_at.isoformat(), db.crypto.enc(text), customer_id, now_ist().isoformat()))
+            self._audit(db, "ALARM_SET", None, customer_id, session_id, {"due": due_at.isoformat()})
+            return cur.lastrowid
+
+    def _alarm_dict(self, r) -> dict:
+        cust = self._customers.get(r["customer_id"]) if r["customer_id"] else None
+        return {"id": r["id"], "due_at": r["due_at"], "text": self.db.crypto.dec(r["text_enc"]),
+                "customer_id": r["customer_id"], "customer": cust.name if cust else None, "status": r["status"]}
+
+    def alarms(self, status: str = "pending") -> list[dict]:
+        rows = self.db.query("SELECT * FROM alarms WHERE status=? ORDER BY due_at", (status,))
+        return [self._alarm_dict(r) for r in rows]
+
+    def due_alarms(self, now: datetime | None = None) -> list[dict]:
+        now = now or now_ist()
+        return [a for a in self.alarms() if datetime.fromisoformat(a["due_at"]) <= now]
+
+    def finish_alarm(self, alarm_id: int, status: str = "done") -> bool:
+        with self.db.transaction() as db:
+            cur = db.conn.execute("UPDATE alarms SET status=? WHERE id=? AND status='pending'", (status, alarm_id))
+            return cur.rowcount > 0
 
     def customer_summary(self, cid: int) -> dict:
         r = self.db.one(
@@ -287,11 +348,16 @@ class Ledger:
         credit, ncredit = self.sum_kind("CREDIT", t, t)
         paid, npaid = self.sum_kind("PAYMENT", t, t)
         top = [{"id": c.id, "name": c.name, "balance": b} for c, b in self.top_debtors(5)]
+        owe, nowe = self.total_owed_by_shop()
+        y = t - timedelta(days=1)
         return {
             "date": t.isoformat(), "today_credit": credit, "today_credit_count": ncredit,
             "today_payments": paid, "today_payments_count": npaid,
             "total_outstanding": self.total_outstanding(), "customers": len(self._customers),
+            "shop_owes": owe, "shop_owes_count": nowe,
             "top_debtors": top, "recent": self.recent_txns(12),
+            "today": self.day_report(t), "yesterday": self.day_report(y),
+            "alarms": self.alarms(),
         }
 
     # ---------------------------------------------------------------- reminders

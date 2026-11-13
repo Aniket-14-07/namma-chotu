@@ -17,6 +17,16 @@ from pathlib import Path
 from cryptography.fernet import Fernet
 
 SCHEMA = """
+CREATE TABLE IF NOT EXISTS alarms (
+    id          INTEGER PRIMARY KEY,
+    due_at      TEXT NOT NULL,              -- ISO-8601 IST
+    text_enc    BLOB NOT NULL,
+    customer_id INTEGER REFERENCES customers(id),
+    status      TEXT NOT NULL DEFAULT 'pending',   -- pending | done | cancelled
+    created_at  TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT);
+
 PRAGMA journal_mode=WAL;
 PRAGMA foreign_keys=ON;
 
@@ -82,6 +92,7 @@ CREATE TABLE IF NOT EXISTS reminders (
 
 
 PG_SCHEMA = [
+    """CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT)""",
     """CREATE TABLE IF NOT EXISTS customers (
         id BIGSERIAL PRIMARY KEY, name_enc BYTEA NOT NULL, name_hi_enc BYTEA, phone_enc BYTEA,
         reminder_opt_in INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1)""",
@@ -100,6 +111,10 @@ PG_SCHEMA = [
     """CREATE TABLE IF NOT EXISTS transcripts (
         id BIGSERIAL PRIMARY KEY, session_id TEXT NOT NULL, ts TEXT NOT NULL, role TEXT NOT NULL, lang TEXT,
         text_enc BYTEA NOT NULL, latency_ms INTEGER)""",
+    """CREATE TABLE IF NOT EXISTS alarms (
+        id BIGSERIAL PRIMARY KEY, due_at TEXT NOT NULL, text_enc BYTEA NOT NULL, customer_id BIGINT REFERENCES customers(id),
+        status TEXT NOT NULL DEFAULT 'pending', created_at TEXT NOT NULL)""",
+    "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS txn_time TEXT",
     """CREATE TABLE IF NOT EXISTS reminders (
         id BIGSERIAL PRIMARY KEY, customer_id BIGINT NOT NULL REFERENCES customers(id), created_at TEXT NOT NULL,
         message_enc BYTEA NOT NULL, status TEXT NOT NULL DEFAULT 'draft')""",
@@ -166,6 +181,9 @@ class Database:
         self.conn.row_factory = sqlite3.Row
         with self.lock:
             self.conn.executescript(SCHEMA)
+            cols = {r["name"] for r in self.conn.execute("PRAGMA table_info(transactions)")}
+            if "txn_time" not in cols:          # added Nov 2026: time of day of an entry (HH:MM, IST)
+                self.conn.execute("ALTER TABLE transactions ADD COLUMN txn_time TEXT")
 
     def execute(self, sql: str, params: tuple | dict = ()):
         with self.lock:
@@ -219,7 +237,7 @@ class _PgConn:
         if s.upper().startswith("BEGIN"):
             s = "BEGIN"
         s = s.replace("?", "%s")
-        returning = bool(_INSERT.match(s)) and "RETURNING" not in s.upper()
+        returning = bool(_INSERT.match(s)) and "RETURNING" not in s.upper() and "INTO APP_SETTINGS" not in s.upper()
         if returning:
             s += " RETURNING id"
         try:

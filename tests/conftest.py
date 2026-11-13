@@ -24,7 +24,7 @@ def fresh_db() -> Database:
         return Database(":memory:", Crypto(Fernet.generate_key()))
     import psycopg
     with psycopg.connect(url, autocommit=True) as c:
-        c.execute("DROP TABLE IF EXISTS reminders, transcripts, audit_log, transactions, customers CASCADE")
+        c.execute("DROP TABLE IF EXISTS alarms, app_settings, reminders, transcripts, audit_log, transactions, customers CASCADE")
     return Database(url, Crypto(Fernet.generate_key()))
 
 

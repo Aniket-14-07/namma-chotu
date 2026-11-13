@@ -33,7 +33,10 @@ from .nlu.lexicon import WAKE
 from .nlu.normalize import tokenize
 from .nlu.parser import parse
 from .nlu.romanize import pkey
-from .timeutil import today_ist
+from datetime import datetime, timedelta
+
+from . import responses as R
+from .timeutil import IST, now_ist, today_ist
 
 log = logging.getLogger("voice")
 
@@ -44,6 +47,21 @@ FOLLOWUP_WINDOW_S = 8.0     # after a reply/question, answers don't need the wak
 TTS_LANG = {"hi": "hi-IN", "en": "en-IN", "kn": "kn-IN"}
 PTT_FLUSH_TIMEOUT_S = 2.5
 BARGE_IN_GRACE_S = 0.45      # ignore speech_start right after TTS starts (speaker echo)
+
+
+def wake_config() -> dict | None:
+    """Wake word is on only when a Picovoice key and a trained 'Hey Chotu' .ppn (Web/WASM) are present."""
+    from .config import ROOT
+    if not settings.picovoice_access_key:
+        return None
+    ppn = sorted((ROOT / "web" / "wake").glob("*.ppn"))
+    if not ppn:
+        return None
+    return {"access_key": settings.picovoice_access_key, "keyword_url": f"/wake/{ppn[0].name}",
+            "model_url": "/wake/porcupine_params.pv", "label": "Hey Chotu", "sensitivity": settings.wake_sensitivity}
+
+
+ONE_WORD_OK = {"haan", "han", "ha", "nahi", "nahin", "na", "ok", "okay", "yes", "no", "hmm", "ji", "theek", "sari", "howdu", "illa", "beda"}
 
 
 class VoiceSession:
@@ -71,6 +89,7 @@ class VoiceSession:
         self._flush_task: asyncio.Task | None = None
         self._processing_at = 0.0
         self._last_reply_at = 0.0
+        self.wake_turn = False
         self.closed = False
 
     # ------------------------------------------------------------------ io
@@ -94,8 +113,10 @@ class VoiceSession:
 
     async def run(self) -> None:
         await self.ws.accept()
+        self._tick_task = asyncio.create_task(self._ticker(), name="reminders")
         await self.send({"type": "ready", "live": self.live, "session": self.id,
-                         "mode_label": "Gnani Prisma v3.0 + Timbre v3.0" if self.live else "MOCK (typed text only, no Gnani)"})
+                         "mode_label": "Gnani Prisma v3.0 + Timbre v3.0" if self.live else "MOCK (typed text only, no Gnani)",
+                         "wake": wake_config()})
         try:
             while True:
                 msg = await self.ws.receive()
@@ -116,7 +137,7 @@ class VoiceSession:
             await self.shutdown()
 
     async def shutdown(self) -> None:
-        for t in (self._speak_task, self._flush_task, self._connect_task):
+        for t in (self._speak_task, self._flush_task, self._connect_task, getattr(self, "_tick_task", None)):
             if t and not t.done():
                 t.cancel()
         if self.stt:
@@ -145,6 +166,7 @@ class VoiceSession:
         elif typ == "ptt_down":
             await self.barge_in("ptt")
             self.pressing = True
+            self.wake_turn = bool(d.get("wake"))
             self.utt_parts, self.utt_ids, self.utt_lang = [], [], None
             if self._flush_task and not self._flush_task.done():
                 self._flush_task.cancel()
@@ -282,9 +304,58 @@ class VoiceSession:
         parts, ids, lang = self.utt_parts, self.utt_ids, self.utt_lang
         self.utt_parts, self.utt_ids, self.utt_lang = [], [], None
         if not parts:
-            await self.send({"type": "no_speech"})
+            await self.send({"type": "no_speech", "quiet": getattr(self, "wake_turn", False)})
+            return
+        if getattr(self, "wake_turn", False) and self._is_noise(" ".join(parts)):
+            await self.send({"type": "ignored", "text": " ".join(parts), "reason": "too short, probably background"})
             return
         await self.process(" , ".join(parts), lang, t_end=self.released_at, ids=ids)
+
+    def _is_noise(self, text: str) -> bool:
+        """Hands-free capture picked up a stray word from the shop floor? One word is only kept when it's
+        an answer (haan/nahi), a number, or a question is pending."""
+        words = [w for w in tokenize(text) if w.strip()]
+        if len(words) >= 2 or self.dialogue.pending is not None:
+            return False
+        if not words:
+            return True
+        w = words[0].lower()
+        return not (w in ONE_WORD_OK or any(ch.isdigit() for ch in w))
+
+    # ------------------------------------------------------------- reminders
+    async def _ticker(self) -> None:
+        """While the app is open: fire due reminders and the daily closing summary (spoken + on screen)."""
+        await asyncio.sleep(3)
+        while not self.closed:
+            try:
+                await self.check_due()
+            except Exception:
+                log.exception("reminder tick failed")
+            await asyncio.sleep(15)
+
+    async def check_due(self, now: datetime | None = None) -> None:
+        now = now or now_ist()
+        for a in self.ledger.due_alarms(now):
+            if not self.ledger.finish_alarm(a["id"]):
+                continue                           # another open screen already fired it
+            rep = self.dialogue.push_reply(R.simple("alarm_fire", self._push_lang(), x=a["text"]))
+            rep.events.append({"type": "alarm", "alarm": a})
+            await self.deliver(rep, None)
+        if self.ledger.get_setting("closing_on", "1") != "1":
+            return
+        ct = self.ledger.get_setting("closing_time", settings.closing_time)
+        h, m = (int(x) for x in ct.split(":"))
+        due = datetime.combine(now.date(), datetime.min.time().replace(hour=h, minute=m), tzinfo=IST)
+        if due <= now < due + timedelta(hours=3) and self.ledger.get_setting("closing_done") != now.date().isoformat():
+            self.ledger.set_setting("closing_done", now.date().isoformat())
+            d = now.date()
+            rep = self.dialogue.push_reply(self.dialogue.summary_parts(d, d, "today", self._push_lang(), intro=True))
+            rep.events.append({"type": "closing"})
+            await self.deliver(rep, None)
+
+    def _push_lang(self) -> str:
+        d = self.dialogue
+        return d.preferred if d.preferred != "auto" else d.lang
 
     # ------------------------------------------------------------- turns
     async def process(self, text: str, lang: str | None, t_end: float | None, ids: list[str]) -> None:

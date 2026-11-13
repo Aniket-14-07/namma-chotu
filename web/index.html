@@ -66,9 +66,10 @@
   <!-- HISAAB: dashboard -->
   <section id="tab-hisaab" class="tab" aria-label="Hisaab">
     <div class="outstanding">
-      <p class="k" data-i18n="d_out">Market mein baaki</p>
+      <p class="k" data-i18n="d_out">Market se lena hai</p>
       <p class="v" id="dOut">—</p>
       <p class="sub" id="dCust"></p>
+      <p class="owe"><span data-i18n="d_owe">Aapko dena hai</span> <strong id="dOwe">—</strong></p>
     </div>
     <div class="today">
       <div class="stat credit"><p class="v" id="dCredit">—</p><p class="k" data-i18n="d_credit">Udhaar gaya aaj</p></div>
@@ -78,6 +79,12 @@
     <ol id="dTop" class="rows"></ol>
     <h2 data-i18n="d_today">Aaj ki entries</h2>
     <ol id="dRecent" class="rows txns"></ol>
+    <h2><span data-i18n="d_yday">Kal ki entries</span> <small id="dYdaySum" class="h-sub"></small></h2>
+    <ol id="dYday" class="rows txns"></ol>
+    <h2 data-i18n="d_alarms">Yaad-dihani</h2>
+    <ol id="dAlarms" class="rows"></ol>
+    <label class="closing"><input type="checkbox" id="closingOn" checked> <span data-i18n="d_closing">Roz hisaab sunane ka samay</span>
+      <input type="time" id="closingTime" value="21:00"></label>
   </section>
 
   <!-- KHATA: customers -->

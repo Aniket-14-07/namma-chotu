@@ -26,39 +26,39 @@ const S = {
 
 /* ---------------------------------------------------------------- language */
 const I18N = {
-  hi: { add: "जोड़ें", add_title: "नया ग्राहक", name: "नाम", phone: "फ़ोन (ज़रूरी नहीं)", save: "सेव करें", cancel: "रद्द", edit: "नाम/फ़ोन बदलें", edit_title: "ग्राहक बदलें", remove: "ग्राहक हटाएँ", remove_q: "इस ग्राहक को सूची से हटाएँ? पुराना हिसाब ऑडिट में रहेगा।", saved: "सेव हो गया", new_acct: "नया खाता", fix_name: "नाम ठीक करें", renamed: "नाम बदला", balance: "बाकी", tag: "आपकी दुकान, आपकी आवाज़", first_entry: "आज की पहली एंट्री बोलिए", example: "“रमेश का 340 उधार”",
-    rem_title: "विनम्र याद-संदेश तैयार", rem_send: "WhatsApp पर भेजें", close: "बंद करें", d_credit: "आज उधार गया",
-    d_paid: "आज जमा हुआ", d_out: "बाज़ार में बाकी", d_top: "सबसे ज़्यादा बाकी", d_today: "आज की एंट्री", search: "ग्राहक खोजें",
+  hi: { get_lbl: "लेना है", give_lbl: "देना है", settled: "हिसाब बराबर", d_owe: "आपको देना है", d_yday: "कल की एंट्री", d_alarms: "याद-दिहानी", d_closing: "रोज़ हिसाब सुनाने का समय", alarm_title: "याद-दिहानी", cancel_alarm: "हटाएँ", add: "जोड़ें", add_title: "नया ग्राहक", name: "नाम", phone: "फ़ोन (ज़रूरी नहीं)", save: "सेव करें", cancel: "रद्द", edit: "नाम/फ़ोन बदलें", edit_title: "ग्राहक बदलें", remove: "ग्राहक हटाएँ", remove_q: "इस ग्राहक को सूची से हटाएँ? पुराना हिसाब ऑडिट में रहेगा।", saved: "सेव हो गया", new_acct: "नया खाता", fix_name: "नाम ठीक करें", renamed: "नाम बदला", balance: "बाकी", tag: "आपकी दुकान, आपकी आवाज़", first_entry: "आज की पहली एंट्री बोलिए", example: "“रमेश का 340 उधार”",
+    rem_title: "विनम्र याद-संदेश तैयार", rem_send: "WhatsApp पर भेजें", close: "बंद करें", d_credit: "आज उधार दिया",
+    d_paid: "आज जमा मिला", d_out: "बाज़ार से लेना है", d_top: "सबसे ज़्यादा बाकी", d_today: "आज की एंट्री", search: "ग्राहक खोजें",
     type: "लिखें", hold: "दबाकर बोलिए", send: "भेजें", tab_bolo: "बोलो", tab_hisaab: "हिसाब", tab_khata: "खाता",
     listening: "सुन रहा हूँ…", listening_ptt: "सुन रहा हूँ… छोड़ते ही लिख दूँगा", thinking: "लिख रहा हूँ…",
     speaking: "बोल रहा हूँ… (बीच में बोल सकते हैं)", no_speech: "कुछ सुनाई नहीं दिया। दबाकर बोलिए",
-    muted: "माइक बंद है, टैप करके खोलें", hf: "“छोटू, …” बोलकर शुरू करें", mode_ptt: "दबाकर बोलें", mode_hf: "हैंड्स-फ़्री: “छोटू, …”",
+    muted: "माइक बंद है, टैप करके खोलें", hf: "“छोटू, …” बोलकर शुरू करें", mode_ptt: "दबाकर बोलें", mode_hf: "हैंड्स-फ़्री: “छोटू, …”", mode_wake: "“Hey Chotu”", wake_idle: "बोलिए “Hey Chotu”", wake_listen: "सुन रहा हूँ… बोलिए", wake_err: "Wake word शुरू नहीं हुआ",
     yes: "हाँ", no: "नहीं", skip: "रहने दो", credit: "उधार", payment: "जमा", removed: "हटा दी", due: "कुल बाकी",
     advance: "एडवांस", nothing_due: "कुछ बाकी नहीं", today: "आज", yesterday: "कल", day_before: "परसों",
-    customers_n: "ग्राहक", none_owe: "किसी पर उधार नहीं", corrected: "सुधारी गई", voided: "हटाई गई", no_today: "आज अभी कोई एंट्री नहीं।",
+    customers_n: "ग्राहक", none_owe: "किसी से कुछ लेना नहीं", corrected: "सुधारी गई", voided: "हटाई गई", no_today: "आज अभी कोई एंट्री नहीं।",
     last_entry: "आख़िरी एंट्री", no_entry: "कोई एंट्री नहीं", adv_short: "एडवांस",
     optin: "ग्राहक ने याद-संदेश के लिए हाँ कहा है", src_seed: "पुरानी एंट्री", src_voice: "आवाज़ से", src_fix: "सुधार", src_ui: "हाथ से",
     mic_err: "माइक नहीं मिला। फ़ोन पर HTTPS लिंक खोलें और माइक की अनुमति दें।", ignored: "छोटू के लिए नहीं था, छोड़ दिया" },
-  kn: { add: "ಸೇರಿಸಿ", add_title: "ಹೊಸ ಗ್ರಾಹಕರು", name: "ಹೆಸರು", phone: "ಫೋನ್ (ಐಚ್ಛಿಕ)", save: "ಉಳಿಸಿ", cancel: "ರದ್ದು", edit: "ಹೆಸರು/ಫೋನ್ ಬದಲಿಸಿ", edit_title: "ಗ್ರಾಹಕರ ವಿವರ ಬದಲಿಸಿ", remove: "ಗ್ರಾಹಕರನ್ನು ತೆಗೆಯಿರಿ", remove_q: "ಈ ಗ್ರಾಹಕರನ್ನು ಪಟ್ಟಿಯಿಂದ ತೆಗೆಯಲೇ? ಹಳೆಯ ಲೆಕ್ಕ ಆಡಿಟ್‌ನಲ್ಲಿ ಇರುತ್ತದೆ.", saved: "ಉಳಿಸಲಾಗಿದೆ", new_acct: "ಹೊಸ ಖಾತೆ", fix_name: "ಹೆಸರು ಸರಿಪಡಿಸಿ", renamed: "ಹೆಸರು ಬದಲಾಯಿತು", balance: "ಬಾಕಿ", tag: "ನಿಮ್ಮ ಅಂಗಡಿ, ನಿಮ್ಮ ಧ್ವನಿ", first_entry: "ಇವತ್ತಿನ ಮೊದಲ ಎಂಟ್ರಿ ಹೇಳಿ", example: "“ರಮೇಶ್ 340 ಉದ್ರಿ”",
+  kn: { get_lbl: "ಬರಬೇಕು", give_lbl: "ಕೊಡಬೇಕು", settled: "ಲೆಕ್ಕ ಸರಿಸಮ", d_owe: "ನೀವು ಕೊಡಬೇಕು", d_yday: "ನಿನ್ನೆಯ ಎಂಟ್ರಿಗಳು", d_alarms: "ನೆನಪಿನ ಸೂಚನೆಗಳು", d_closing: "ದಿನದ ಲೆಕ್ಕ ಹೇಳುವ ಸಮಯ", alarm_title: "ನೆನಪು", cancel_alarm: "ತೆಗೆಯಿರಿ", add: "ಸೇರಿಸಿ", add_title: "ಹೊಸ ಗ್ರಾಹಕರು", name: "ಹೆಸರು", phone: "ಫೋನ್ (ಐಚ್ಛಿಕ)", save: "ಉಳಿಸಿ", cancel: "ರದ್ದು", edit: "ಹೆಸರು/ಫೋನ್ ಬದಲಿಸಿ", edit_title: "ಗ್ರಾಹಕರ ವಿವರ ಬದಲಿಸಿ", remove: "ಗ್ರಾಹಕರನ್ನು ತೆಗೆಯಿರಿ", remove_q: "ಈ ಗ್ರಾಹಕರನ್ನು ಪಟ್ಟಿಯಿಂದ ತೆಗೆಯಲೇ? ಹಳೆಯ ಲೆಕ್ಕ ಆಡಿಟ್‌ನಲ್ಲಿ ಇರುತ್ತದೆ.", saved: "ಉಳಿಸಲಾಗಿದೆ", new_acct: "ಹೊಸ ಖಾತೆ", fix_name: "ಹೆಸರು ಸರಿಪಡಿಸಿ", renamed: "ಹೆಸರು ಬದಲಾಯಿತು", balance: "ಬಾಕಿ", tag: "ನಿಮ್ಮ ಅಂಗಡಿ, ನಿಮ್ಮ ಧ್ವನಿ", first_entry: "ಇವತ್ತಿನ ಮೊದಲ ಎಂಟ್ರಿ ಹೇಳಿ", example: "“ರಮೇಶ್ 340 ಉದ್ರಿ”",
     rem_title: "ವಿನಯದ ನೆನಪಿನ ಸಂದೇಶ ಸಿದ್ಧ", rem_send: "WhatsApp ನಲ್ಲಿ ಕಳಿಸಿ", close: "ಮುಚ್ಚಿ", d_credit: "ಇವತ್ತು ಉದ್ರಿ",
-    d_paid: "ಇವತ್ತು ಜಮಾ", d_out: "ಮಾರ್ಕೆಟ್‌ನಲ್ಲಿ ಬಾಕಿ", d_top: "ಅತಿ ಹೆಚ್ಚು ಬಾಕಿ", d_today: "ಇವತ್ತಿನ ಎಂಟ್ರಿಗಳು", search: "ಗ್ರಾಹಕರನ್ನು ಹುಡುಕಿ",
+    d_paid: "ಇವತ್ತು ಜಮಾ", d_out: "ಮಾರ್ಕೆಟ್‌ನಿಂದ ಬರಬೇಕು", d_top: "ಅತಿ ಹೆಚ್ಚು ಬಾಕಿ", d_today: "ಇವತ್ತಿನ ಎಂಟ್ರಿಗಳು", search: "ಗ್ರಾಹಕರನ್ನು ಹುಡುಕಿ",
     type: "ಟೈಪ್", hold: "ಒತ್ತಿ ಹಿಡಿದು ಮಾತಾಡಿ", send: "ಕಳಿಸಿ", tab_bolo: "ಮಾತಾಡಿ", tab_hisaab: "ಲೆಕ್ಕ", tab_khata: "ಖಾತೆ",
     listening: "ಕೇಳುತ್ತಿದ್ದೇನೆ…", listening_ptt: "ಕೇಳುತ್ತಿದ್ದೇನೆ… ಬಿಟ್ಟ ತಕ್ಷಣ ಬರೆಯುತ್ತೇನೆ", thinking: "ಬರೆಯುತ್ತಿದ್ದೇನೆ…",
     speaking: "ಮಾತಾಡುತ್ತಿದ್ದೇನೆ… (ಮಧ್ಯದಲ್ಲಿ ಮಾತಾಡಬಹುದು)", no_speech: "ಏನೂ ಕೇಳಿಸಲಿಲ್ಲ. ಒತ್ತಿ ಹಿಡಿದು ಮಾತಾಡಿ",
-    muted: "ಮೈಕ್ ಆಫ್ ಆಗಿದೆ, ಟ್ಯಾಪ್ ಮಾಡಿ", hf: "“ಛೋಟು, …” ಎಂದು ಶುರು ಮಾಡಿ", mode_ptt: "ಒತ್ತಿ ಮಾತಾಡಿ", mode_hf: "ಹ್ಯಾಂಡ್ಸ್-ಫ್ರೀ: “ಛೋಟು, …”",
+    muted: "ಮೈಕ್ ಆಫ್ ಆಗಿದೆ, ಟ್ಯಾಪ್ ಮಾಡಿ", hf: "“ಛೋಟು, …” ಎಂದು ಶುರು ಮಾಡಿ", mode_ptt: "ಒತ್ತಿ ಮಾತಾಡಿ", mode_hf: "ಹ್ಯಾಂಡ್ಸ್-ಫ್ರೀ: “ಛೋಟು, …”", mode_wake: "“Hey Chotu”", wake_idle: "“Hey Chotu” ಎಂದು ಹೇಳಿ", wake_listen: "ಕೇಳುತ್ತಿದ್ದೇನೆ… ಹೇಳಿ", wake_err: "Wake word ಶುರುವಾಗಲಿಲ್ಲ",
     yes: "ಹೌದು", no: "ಇಲ್ಲ", skip: "ಬೇಡ", credit: "ಉದ್ರಿ", payment: "ಜಮಾ", removed: "ತೆಗೆದಿದೆ", due: "ಒಟ್ಟು ಬಾಕಿ",
     advance: "ಮುಂಗಡ", nothing_due: "ಏನೂ ಬಾಕಿ ಇಲ್ಲ", today: "ಇವತ್ತು", yesterday: "ನಿನ್ನೆ", day_before: "ಮೊನ್ನೆ",
     customers_n: "ಗ್ರಾಹಕರು", none_owe: "ಯಾರ ಮೇಲೂ ಉದ್ರಿ ಇಲ್ಲ", corrected: "ಸರಿಪಡಿಸಲಾಗಿದೆ", voided: "ತೆಗೆಯಲಾಗಿದೆ", no_today: "ಇವತ್ತು ಇನ್ನೂ ಎಂಟ್ರಿ ಇಲ್ಲ.",
     last_entry: "ಕೊನೆಯ ಎಂಟ್ರಿ", no_entry: "ಎಂಟ್ರಿ ಇಲ್ಲ", adv_short: "ಮುಂಗಡ",
     optin: "ಗ್ರಾಹಕರು ನೆನಪಿನ ಸಂದೇಶಕ್ಕೆ ಒಪ್ಪಿದ್ದಾರೆ", src_seed: "ಹಳೆಯ ಎಂಟ್ರಿ", src_voice: "ಧ್ವನಿಯಿಂದ", src_fix: "ತಿದ್ದುಪಡಿ", src_ui: "ಕೈಯಿಂದ",
     mic_err: "ಮೈಕ್ ಸಿಗಲಿಲ್ಲ. ಫೋನ್‌ನಲ್ಲಿ HTTPS ಲಿಂಕ್ ತೆರೆಯಿರಿ ಮತ್ತು ಮೈಕ್ ಅನುಮತಿ ಕೊಡಿ.", ignored: "ಛೋಟುಗೆ ಅಲ್ಲ, ಬಿಟ್ಟೆ" },
-  en: { add: "Add", add_title: "New customer", name: "Name", phone: "Phone (optional)", save: "Save", cancel: "Cancel", edit: "Edit name / phone", edit_title: "Edit customer", remove: "Remove customer", remove_q: "Remove this customer from the list? Their history stays in the audit log.", saved: "Saved", new_acct: "New account", fix_name: "Fix name", renamed: "Name changed", balance: "Due", tag: "Your kirana, your voice", first_entry: "Say today's first entry", example: "“Ramesh, 340 credit”",
-    rem_title: "Polite reminder ready", rem_send: "Send on WhatsApp", close: "Close", d_credit: "Credit given today",
-    d_paid: "Received today", d_out: "Pending in the market", d_top: "Highest dues", d_today: "Today's entries", search: "Find a customer",
+  en: { get_lbl: "you get", give_lbl: "you owe", settled: "Settled", d_owe: "You owe", d_yday: "Yesterday's entries", d_alarms: "Reminders", d_closing: "Daily summary time", alarm_title: "Reminder", cancel_alarm: "Remove", add: "Add", add_title: "New customer", name: "Name", phone: "Phone (optional)", save: "Save", cancel: "Cancel", edit: "Edit name / phone", edit_title: "Edit customer", remove: "Remove customer", remove_q: "Remove this customer from the list? Their history stays in the audit log.", saved: "Saved", new_acct: "New account", fix_name: "Fix name", renamed: "Name changed", balance: "Due", tag: "Your kirana, your voice", first_entry: "Say today's first entry", example: "“Ramesh, 340 credit”",
+    rem_title: "Polite reminder ready", rem_send: "Send on WhatsApp", close: "Close", d_credit: "You gave today",
+    d_paid: "You got today", d_out: "You'll get from the market", d_top: "Highest dues", d_today: "Today's entries", search: "Find a customer",
     type: "Type", hold: "Hold and speak", send: "Send", tab_bolo: "Speak", tab_hisaab: "Summary", tab_khata: "Khata",
     listening: "Listening…", listening_ptt: "Listening… release to record", thinking: "Writing…",
     speaking: "Speaking… (you can interrupt)", no_speech: "Didn't hear anything. Hold and speak",
-    muted: "Mic is off, tap to turn on", hf: "Start with “Chotu, …”", mode_ptt: "Hold to talk", mode_hf: "Hands-free: “Chotu, …”",
+    muted: "Mic is off, tap to turn on", hf: "Start with “Chotu, …”", mode_ptt: "Hold to talk", mode_hf: "Hands-free: “Chotu, …”", mode_wake: "“Hey Chotu”", wake_idle: "Say “Hey Chotu”", wake_listen: "Listening… go ahead", wake_err: "Wake word could not start",
     yes: "Yes", no: "No", skip: "Skip", credit: "credit", payment: "paid", removed: "removed", due: "Total due",
     advance: "advance", nothing_due: "Nothing due", today: "today", yesterday: "yesterday", day_before: "day before",
     customers_n: "customers", none_owe: "Nobody owes anything", corrected: "corrected", voided: "removed", no_today: "No entries yet today.",
@@ -72,7 +72,7 @@ function applyI18n() {
   document.documentElement.lang = uiLang();
   document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = tr(el.dataset.i18n)));
   document.querySelectorAll("[data-i18n-ph]").forEach((el) => (el.placeholder = tr(el.dataset.i18nPh)));
-  $("#modeBtn .lbl").textContent = S.mode === "handsfree" ? tr("mode_hf") : tr("mode_ptt");
+  $("#modeBtn .lbl").textContent = modeLabel(S.mode);
   if (S.started) micState(restingHint());
 }
 function setLang(lang, fromUser) {
@@ -103,6 +103,8 @@ function onJson(m) {
   switch (m.type) {
     case "ready":
       S.live = m.live;
+      S.wakeCfg = m.wake || null;
+      if (S.wakeCfg && S.live && S.mode === "ptt" && !S.wakeTried) { S.wakeTried = true; if (S.started) setMode("wake"); }
       setBadge(m.live ? "Live" : "Mock", m.live ? "live" : "mock");
       if (!m.live) { $("#typeForm").hidden = false; $("#typeBtn").setAttribute("aria-pressed", "true"); $("#mic").disabled = true; micState("Mock mode: no Gnani key, type below"); }
       break;
@@ -110,11 +112,12 @@ function onJson(m) {
       if (m.text) addFeed(m.text, m.typed ? "you typed" : "you");
       break;
     case "stt_event":
-      if (m.event === "speech_start" && S.mode === "handsfree") setMic("listening", tr("listening"));
-      if (m.event === "processing") setMic("thinking", tr("thinking"));
+      if (m.event === "speech_start" && S.mode === "handsfree") { S.turnOpen = true; setMic("listening", tr("listening")); }
+      if (m.event === "processing" && S.turnOpen && !S.speaking) setMic("thinking", tr("thinking"));
       break;
     case "no_speech":
-      setMic("", tr("no_speech"));
+      S.turnOpen = false;
+      if (m.quiet) restMic(); else setMic("", tr("no_speech"));
       break;
     case "reply":
       onReply(m);
@@ -123,9 +126,11 @@ function onJson(m) {
       S.ttsRate = m.sample_rate || 16000;
       break;
     case "tts_end":
+      if (!S.sources.length) restMic();
       break;
     case "tts_cancel":
       stopPlayback();
+      restMic();
       break;
     case "metrics":
       if (m.end_to_first_audio_ms != null) showLatency(m.end_to_first_audio_ms, "server");
@@ -137,6 +142,7 @@ function onJson(m) {
       break;
     case "ignored":
       addFeed(`"${m.text}" (${tr("ignored")})`, "sys");
+      restMic();
       break;
     case "error":
       addFeed(`${m.where || ""} error: ${m.message}`, "err");
@@ -160,6 +166,7 @@ async function startAudio() {
   sink.gain.value = 0;
   src.connect(S.node).connect(sink).connect(S.ctx.destination);
   S.node.port.onmessage = (e) => {
+    if (S.mode === "wake") return onWakeFrame(e.data);
     if (S.capturing && !S.muted && S.ws && S.ws.readyState === 1) S.ws.send(e.data);
   };
 }
@@ -181,7 +188,7 @@ function playPcm(buf) {
   S.sources.push(src);
   src.onended = () => {
     S.sources = S.sources.filter((x) => x !== src);
-    if (!S.sources.length) { S.speaking = false; if (!S.capturing || S.mode === "handsfree") setMic("", restingHint()); }
+    if (!S.sources.length) { S.speaking = false; restMic(); afterReplyDone(); }
   };
   if (S.waitingFirstAudio) {
     S.waitingFirstAudio = false;
@@ -195,6 +202,98 @@ function stopPlayback() {
   S.sources = [];
   S.nextTime = 0;
   S.speaking = false;
+}
+
+
+/* ------------------------------------------------------- "Hey Chotu" wake word
+   Porcupine runs on the phone (WASM); nothing leaves the phone until the wake word is heard.
+   After the wake word: one command is captured with a loudness gate (far/quiet voices are sent as
+   silence), it ends on ~0.9 s of quiet, then Chotu goes back to sleep. After Chotu replies there is
+   an 8 s follow-up window ("haan", "aur 200") without saying the wake word again. */
+function loadScript(src) {
+  return new Promise((ok, bad) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); });
+}
+async function initWake() {
+  if (S.pv) return true;
+  if (!S.wakeCfg) return false;
+  try {
+    if (!window.PorcupineWeb) await loadScript("/vendor/porcupine-web.min.js");
+    const c = S.wakeCfg;
+    S.pv = await PorcupineWeb.PorcupineWorker.create(
+      c.access_key,
+      [{ label: c.label, publicPath: c.keyword_url, sensitivity: c.sensitivity, forceWrite: true }],
+      () => onWake(),
+      { publicPath: c.model_url, forceWrite: true },
+      { processErrorCallback: (err) => console.warn("porcupine", err) });
+    return true;
+  } catch (err) {
+    console.warn("wake init failed", err);
+    addFeed(`${tr("wake_err")}: ${err.message || err}`, "err");
+    S.pv = null;
+    return false;
+  }
+}
+function frameDb(i16) {
+  let sum = 0;
+  for (let i = 0; i < i16.length; i++) sum += i16[i] * i16[i];
+  const rms = Math.sqrt(sum / i16.length) / 32768;
+  return 20 * Math.log10(rms + 1e-9);
+}
+S.floorBuf = [];
+function noiseFloor() {
+  if (S.floorBuf.length < 10) return -60;
+  const a = [...S.floorBuf].sort((x, y) => x - y);
+  return a[Math.floor(a.length * 0.3)];
+}
+function onWakeFrame(buf) {
+  const frame = new Int16Array(buf);
+  const db = frameDb(frame);
+  const t = performance.now();
+  const w = S.wakeTurn;
+  if (!w) {
+    S.floorBuf.push(db);
+    if (S.floorBuf.length > 120) S.floorBuf.shift();            // ~4 s of shop noise
+    if (S.pv && !S.speaking) S.pv.process(frame);
+    return;
+  }
+  // capturing one command: gate = shop noise + 12 dB (someone close to the phone)
+  const gate = Math.max(noiseFloor() + 12, -50);
+  const loud = db > gate;
+  w.run = loud ? w.run + 1 : 0;
+  if (w.run >= 3) { w.heard = true; w.lastLoud = t; }
+  else if (loud && w.heard) w.lastLoud = t;
+  if (S.ws && S.ws.readyState === 1) S.ws.send(loud || w.heard ? buf : new Int16Array(frame.length).buffer);
+  const done = (w.heard && t - w.lastLoud > 900) || (!w.heard && t - w.start > w.wait) || t - w.start > 12000;
+  if (done) endWakeTurn();
+}
+function beep() {
+  if (!S.ctx) return;
+  const o = S.ctx.createOscillator(), g = S.ctx.createGain();
+  o.frequency.value = 880; g.gain.value = 0.08;
+  o.connect(g).connect(S.ctx.destination);
+  o.start(); o.stop(S.ctx.currentTime + 0.12);
+}
+function onWake(followUp = false) {
+  if (S.mode !== "wake" || S.wakeTurn) return;
+  if (!followUp) { stopPlayback(); send({ type: "interrupt" }); beep(); if (navigator.vibrate) navigator.vibrate(20); }
+  S.wakeTurn = { start: performance.now(), heard: false, lastLoud: 0, run: 0, wait: followUp ? 8000 : 5000, followUp };
+  S.capturing = true;
+  send({ type: "ptt_down", wake: true });
+  setMic("listening", tr("wake_listen"));
+}
+function endWakeTurn() {
+  const w = S.wakeTurn;
+  S.wakeTurn = null;
+  S.capturing = false;
+  S.releaseAt = performance.now();
+  send({ type: "ptt_up" });
+  if (w && w.heard) { S.turnOpen = true; S.waitingFirstAudio = true; S.lastWake = true; setMic("thinking", tr("thinking")); }
+  else { S.lastWake = false; restMic(); }
+}
+function afterReplyDone() {
+  if (S.mode !== "wake" || !S.lastWake || S.wakeTurn) return;
+  S.lastWake = false;                 // one follow-up window per reply
+  setTimeout(() => onWake(true), 250);
 }
 
 /* ------------------------------------------------------------ talk controls */
@@ -215,31 +314,48 @@ function pressEnd(e) {
   S.releaseAt = performance.now();
   S.waitingFirstAudio = true;
   send({ type: "ptt_up" });
+  S.turnOpen = true;
   setMic("thinking", tr("thinking"));
 }
 
 function setMode(mode) {
+  if (mode === "wake" && !S.pv) { initWake().then((ok) => ok ? setMode("wake") : micState(tr("wake_err"))); return; }
   S.mode = mode;
   const hf = mode === "handsfree";
-  $("#modeBtn").setAttribute("aria-pressed", String(hf));
-  $("#modeBtn .lbl").textContent = hf ? tr("mode_hf") : tr("mode_ptt");
+  $("#modeBtn").setAttribute("aria-pressed", String(mode !== "ptt"));
+  $("#modeBtn .lbl").textContent = modeLabel(mode);
   S.capturing = hf;
   S.muted = false;
-  send({ type: "mode", mode });
-  setMic(hf ? "listening" : "", restingHint());
+  S.wakeTurn = null;
+  send({ type: "mode", mode: hf ? "handsfree" : "ptt" });
+  setMic("", restingHint());
 }
-const restingHint = () => (S.mode === "handsfree" ? (S.muted ? tr("muted") : tr("hf")) : tr("hold"));
+const restingHint = () => (S.mode === "wake" ? tr("wake_idle") : S.mode === "handsfree" ? (S.muted ? tr("muted") : tr("hf")) : tr("hold"));
+const modeLabel = (m) => (m === "wake" ? tr("mode_wake") : m === "handsfree" ? tr("mode_hf") : tr("mode_ptt"));
 
+let micTimer = null;
 function setMic(state, text) {
   const mic = $("#mic");
   mic.classList.remove("listening", "thinking", "speaking");
   if (state) mic.classList.add(state);
   if (text) micState(text);
+  // safety net: no state may spin forever
+  clearTimeout(micTimer);
+  if (state === "thinking" || state === "speaking") micTimer = setTimeout(() => restMic(), state === "thinking" ? 9000 : 30000);
+}
+// back to idle unless the user is actively holding the button / wake capture is open
+function restMic() {
+  if (S.capturing && S.mode === "ptt") return;
+  S.turnOpen = false;
+  setMic(S.wakeTurn ? "listening" : "", restingHint());
 }
 const micState = (t) => ($("#micState").textContent = t);
 
 /* ------------------------------------------------------------------ replies */
 function onReply(m) {
+  S.turnOpen = false;
+  // reply arrived: if no audio follows shortly (TTS off/failed), stop the spinner
+  setTimeout(() => { if (!S.speaking && !S.sources.length) { restMic(); afterReplyDone(); } }, 1500);
   if (m.lang && m.lang !== S.replyLang) { S.replyLang = m.lang; if (S.lang === "auto") applyI18n(); }
   addFeed(m.display, "bot");
   const q = $("#question");
@@ -248,9 +364,9 @@ function onReply(m) {
     q.querySelector(".q-text").textContent = "";   // the question is already the last chat bubble
     const box = q.querySelector(".q-options");
     box.innerHTML = "";
-    const opts = m.pending.options.length ? m.pending.options.map((o) => [o.name, o.name])
+    const opts = m.pending.options.length ? m.pending.options.map((o) => [o.name, o.say || o.name])
       : [[tr("yes"), "haan"], [tr("no"), "nahi"]];
-    if (m.pending.options.length) opts.push([tr("skip"), "nahi rehne do"]);
+    if (m.pending.options.length && m.pending.kind !== "need_kind") opts.push([tr("skip"), "nahi rehne do"]);
     for (const [label, said] of opts) {
       const b = document.createElement("button");
       b.type = "button";
@@ -266,6 +382,8 @@ function onReply(m) {
   if (fresh.length) showEntry(fresh[fresh.length - 1].txn, txns.find((e) => e.action === "voided"));
   else if (txns.length) showEntry(txns[0].txn, null, true);
   for (const e of m.events) {
+    if (e.type === "alarm" || e.type === "closing") notify(m.display);
+    if (e.type === "alarm_set" || e.type === "settings") refreshSoon();
     if (e.type === "customer_created") addEditChip(e.customer, tr("new_acct"));
     if (e.type === "customer_updated") { const n = $("#ledgerLine .who-name"); if (S.lineCust === e.customer.id) n.textContent = e.customer.name; }
   }
@@ -294,11 +412,10 @@ async function showEntry(t, voided, removed) {
     w.textContent = inr(voided.txn.amount_paise);
     amt.appendChild(w);
   }
-  box.querySelector(".meta").textContent = dayLabel(t.txn_date);
+  box.querySelector(".meta").textContent = whenText(t);
   try {
     const c = await (await fetch(`/api/customers/${t.customer_id}`)).json();
-    const bal = c.balance > 0 ? `${tr("due")} ${inr(c.balance)}` : c.balance < 0 ? `${inr(-c.balance)} ${tr("advance")}` : tr("nothing_due");
-    box.querySelector(".meta").textContent = `${dayLabel(t.txn_date)}, ${bal}`;
+    box.querySelector(".meta").textContent = `${whenText(t)} · ${balText(c.balance)}`;
   } catch (_) {}
 }
 
@@ -332,6 +449,14 @@ function addEditChip(cust, label) {
   b.textContent = "✎ " + tr("fix_name");
   b.onclick = () => openEdit(cust.id);
   li.appendChild(b);
+}
+function notify(text) {
+  toast(text);
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  try {
+    if ("Notification" in window && Notification.permission === "granted" && document.hidden)
+      new Notification("Namma Chotu", { body: text, icon: "/icon.svg" });
+  } catch (_) {}
 }
 let toastTimer = null;
 function toast(msg) {
@@ -368,21 +493,35 @@ let refreshTimer = null;
 function refreshSoon() { clearTimeout(refreshTimer); refreshTimer = setTimeout(refreshAll, 250); }
 async function refreshAll() { await Promise.all([refreshDash(), refreshCustomers()]); }
 
+const entryRow = (t) =>
+  `<li><span class="n">${esc(t.customer)}<span class="s">${t.txn_time ? fmtTime(t.txn_time) : dayLabel(t.txn_date)}${t.replaces ? ", " + tr("corrected") : ""}</span></span>
+   <span class="m ${t.kind === "PAYMENT" ? "p" : "c"}">${t.kind === "PAYMENT" ? "−" : "+"}${inr(t.amount_paise)}</span></li>`;
+
 async function refreshDash() {
   const d = await (await fetch("/api/dashboard")).json();
   $("#dCredit").textContent = inr(d.today_credit);
   $("#dPaid").textContent = inr(d.today_payments);
   $("#dOut").textContent = inr(d.total_outstanding);
   $("#dCust").textContent = `${d.customers} ${tr("customers_n")}`;
+  $("#dOwe").textContent = inr(d.shop_owes || 0);
   $("#dTop").innerHTML = d.top_debtors.map((c) =>
     `<li><span class="n">${esc(c.name)}</span><span class="m c">${inr(c.balance)}</span></li>`).join("") ||
     `<li class="empty-row">${tr("none_owe")}</li>`;
-  const today = d.date;
-  const rows = d.recent.filter((t) => t.created_at.slice(0, 10) === today && t.source !== "seed");
-  $("#dRecent").innerHTML = rows.map((t) =>
-    `<li class="${t.status === "voided" ? "void" : ""}"><span class="n">${esc(t.customer)}<span class="s">${dayLabel(t.txn_date)}${t.replaces ? ", " + tr("corrected") : ""}${t.status === "voided" ? ", " + tr("voided") : ""}</span></span>
-     <span class="m ${t.kind === "PAYMENT" ? "p" : "c"}">${t.kind === "PAYMENT" ? "−" : "+"}${inr(t.amount_paise)}</span></li>`).join("") ||
-    `<li class="empty-row">${tr("no_today")}</li>`;
+  const day = (r) => r.entries.filter((t) => t.source !== "seed" || true);
+  $("#dRecent").innerHTML = day(d.today).map(entryRow).join("") || `<li class="empty-row">${tr("no_today")}</li>`;
+  $("#dYday").innerHTML = day(d.yesterday).map(entryRow).join("") || `<li class="empty-row">${tr("no_entry")}</li>`;
+  $("#dYdaySum").textContent = `+${inr(d.yesterday.credit)} · −${inr(d.yesterday.payments)}`;
+  $("#dAlarms").innerHTML = (d.alarms || []).map((a) =>
+    `<li><span class="n">${esc(a.text)}<span class="s">${dayLabel(a.due_at.slice(0, 10))}, ${fmtTime(a.due_at.slice(11, 16))}</span></span>
+     <button class="btn danger small" data-alarm="${a.id}" type="button">${esc(tr("cancel_alarm"))}</button></li>`).join("") ||
+    `<li class="empty-row">—</li>`;
+  for (const b of document.querySelectorAll("[data-alarm]"))
+    b.onclick = async () => { await fetch(`/api/alarms/${b.dataset.alarm}`, { method: "DELETE" }); refreshDash(); };
+  try {
+    const st = await (await fetch("/api/settings")).json();
+    $("#closingOn").checked = st.closing_on;
+    if (document.activeElement !== $("#closingTime")) $("#closingTime").value = st.closing_time;
+  } catch (_) {}
 }
 
 let customers = [];
@@ -395,13 +534,20 @@ function renderCustomers() {
   const list = customers.filter((c) => !q || c.name.toLowerCase().includes(q) || (c.name_hi || "").includes(q));
   $("#custList").innerHTML = list.map((c) =>
     `<li><button class="rowbtn" data-id="${c.id}" type="button"><span class="n">${esc(c.name)}<span class="s">${c.last_txn_date ? tr("last_entry") + " " + dayLabel(c.last_txn_date) : tr("no_entry")}</span></span>
-     <span class="m ${c.balance > 0 ? "c" : "p"}">${c.balance < 0 ? inr(-c.balance) + " " + tr("adv_short") : inr(c.balance)}</span></button></li>`).join("");
+     <span class="m ${c.balance > 0 ? "c" : "p"}">${c.balance === 0 ? "—" : inr(Math.abs(c.balance))}<span class="s">${c.balance > 0 ? tr("get_lbl") : c.balance < 0 ? tr("give_lbl") : ""}</span></span></button></li>`).join("");
 }
 const sheet = {
   open(html) { $("#custSheetBody").innerHTML = html; $("#custSheet").hidden = false; },
   close() { $("#custSheet").hidden = true; $("#custSheetBody").innerHTML = ""; },
 };
-const balText = (b) => (b < 0 ? `${inr(-b)} ${tr("advance")}` : b > 0 ? inr(b) : tr("nothing_due"));
+// one balance, always said from the shopkeeper's side: "₹500 लेना है" / "₹300 देना है" / "हिसाब बराबर"
+const balText = (b) => (b > 0 ? `${inr(b)} ${tr("get_lbl")}` : b < 0 ? `${inr(-b)} ${tr("give_lbl")}` : tr("settled"));
+const fmtTime = (hhmm) => {
+  if (!hhmm) return "";
+  const [h, m] = hhmm.split(":").map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
+};
+const whenText = (t) => `${dayLabel(t.txn_date)}${t.txn_time ? ", " + fmtTime(t.txn_time) : ""}`;
 
 async function openCustomer(id) {
   const r = await fetch(`/api/customers/${id}`);
@@ -415,7 +561,7 @@ async function openCustomer(id) {
       ${c.balance === 0 ? `<button class="btn danger" id="cRemove" type="button">${esc(tr("remove"))}</button>` : ""}</div>
     <label class="optin"><input type="checkbox" id="optin" ${c.reminder_opt_in ? "checked" : ""}> ${esc(tr("optin"))}</label>
     <ol class="rows txns">${c.transactions.map((t) =>
-      `<li class="${t.status === "voided" ? "void" : ""}"><span class="n">${dayLabel(t.txn_date)}<span class="s">${({ seed: tr("src_seed"), voice: tr("src_voice"), "voice-correction": tr("src_fix"), ui: tr("src_ui") })[t.source] || t.source}${t.status === "voided" ? ", " + tr("voided") : ""}</span></span>
+      `<li class="${t.status === "voided" ? "void" : ""}"><span class="n">${whenText(t)}<span class="s">${({ seed: tr("src_seed"), voice: tr("src_voice"), "voice-correction": tr("src_fix"), ui: tr("src_ui") })[t.source] || t.source}${t.status === "voided" ? ", " + tr("voided") : ""}</span></span>
        <span class="m ${t.kind === "PAYMENT" ? "p" : "c"}">${t.kind === "PAYMENT" ? "−" : "+"}${inr(t.amount_paise)}</span></li>`).join("") || `<li class="empty-row">${tr("no_entry")}</li>`}</ol>`);
   $("#cEdit").onclick = () => openEdit(id, c);
   const rm = $("#cRemove");
@@ -473,16 +619,17 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 function wire() {
   const mic = $("#mic");
   mic.addEventListener("pointerdown", (e) => {
+    if (S.mode === "wake") { if (!S.capturing) onWake(); return; }
     if (S.mode === "handsfree") {
       S.muted = !S.muted;
       if (!S.muted) stopPlayback();
-      setMic(S.muted ? "" : "listening", restingHint());
+      setMic("", restingHint());
       return;
     }
     mic.setPointerCapture(e.pointerId);
     pressStart(e);
   });
-  mic.addEventListener("pointerup", pressEnd);
+  mic.addEventListener("pointerup", (e) => { if (S.mode !== "wake") pressEnd(e); });
   mic.addEventListener("pointercancel", pressEnd);
   mic.addEventListener("contextmenu", (e) => e.preventDefault());
   document.addEventListener("keydown", (e) => {
@@ -491,13 +638,17 @@ function wire() {
   document.addEventListener("keyup", (e) => {
     if (e.code === "Space" && document.activeElement.tagName !== "INPUT") pressEnd(e);
   });
-  $("#modeBtn").onclick = () => setMode(S.mode === "ptt" ? "handsfree" : "ptt");
+  $("#modeBtn").onclick = () => setMode(S.mode !== "ptt" ? "ptt" : (S.wakeCfg ? "wake" : "handsfree"));
   $("#typeBtn").onclick = () => {
     const f = $("#typeForm"); f.hidden = !f.hidden;
     $("#typeBtn").setAttribute("aria-pressed", String(!f.hidden));
     if (!f.hidden) $("#typeInput").focus();
   };
   $("#addCustBtn").onclick = openAdd;
+  const saveClosing = () => fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ closing_time: $("#closingTime").value, closing_on: $("#closingOn").checked }) }).then(() => toast(tr("saved")));
+  $("#closingTime").onchange = saveClosing;
+  $("#closingOn").onchange = saveClosing;
   $("#lineEdit").onclick = () => S.lineCust && openEdit(S.lineCust);
   $("#custSheet .sheet-x").onclick = () => sheet.close();
   $("#custSheet").onclick = (e) => { if (e.target.id === "custSheet") sheet.close(); };
@@ -524,7 +675,9 @@ function wire() {
     }
     $("#startSheet").hidden = true;
     S.started = true;
-    send({ type: "start", mode: S.mode, lang });
+    try { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); } catch (_) {}
+    send({ type: "start", mode: S.mode === "handsfree" ? "handsfree" : "ptt", lang });
+    if (S.wakeCfg && S.live && S.mode === "ptt") setMode("wake");
     refreshAll();
   }
 }

@@ -39,7 +39,7 @@ class Item:
 
 @dataclass
 class Pending:
-    kind: str                       # which_customer | new_customer | confirm | overpay | need_amount | need_customer
+    kind: str                       # which_customer | new_customer | confirm | overpay(flip) | need_kind | need_amount | need_customer
     item: Item
     queue: list[Item]
     candidates: list[int] = field(default_factory=list)
@@ -187,6 +187,9 @@ class Session:
         if self.pending:
             p = self.pending
             opts = [{"id": c, "name": self._customer(c).name} for c in p.candidates]
+            if p.kind == "need_kind":
+                opts = [{"id": "gave", "name": R.t("opt_gave", turn.lang), "say": "udhaar"},
+                        {"id": "got", "name": R.t("opt_got", turn.lang), "say": "jama"}]
             pending = {"kind": p.kind, "question": disp, "options": opts}
         self.last_turn_wrote = turn.wrote
         return Reply(disp.strip(), speak.strip(), turn.lang, turn.events, pending, intents,
@@ -230,6 +233,10 @@ class Session:
             return self._step_reminder(item, queue, turn)
         if c.intent == "ADD_CUSTOMER":
             return self._step_add_customer(item, turn)
+        if c.intent == "SET_ALARM":
+            return self._step_alarm(item, turn)
+        if c.intent == "CLOSING_TIME":
+            return self._step_closing_time(item, turn)
         if c.intent == "RENAME_CUSTOMER":
             return self._step_rename(item, queue, turn)
         if c.intent == "FUTURE":
@@ -317,19 +324,25 @@ class Session:
         if c.amount is None:
             self._block(turn, Pending("need_amount", item, queue), R.ask_amount(R.name_for(cust, lang), c.kind, lang))
             return True
+        if c.kind is None:
+            # "credit"/"debit" alone, or the LLM couldn't tell who gave: never guess the direction
+            self._block(turn, Pending("need_kind", item, queue), R.ask_kind(R.name_for(cust, lang), c.amount, lang))
+            return True
         needs_confirm = settings.confirm_mode == "always" or c.confidence < 0.7
         if needs_confirm and not item.confirmed:
             self._block(turn, Pending("confirm", item, queue),
                         R.ask_confirm(R.name_for(cust, lang), c.amount, c.kind or "CREDIT", c.date or today_ist(), lang))
             return True
-        if c.kind == "PAYMENT" and not item.overpay_ok:
+        if not item.overpay_ok:
+            # the balance would flip sides (they owed you -> you owe them, or the reverse): always confirm
             bal = self.ledger.balance(cid) + self._pending_effect(turn, cid)
-            if c.amount > bal:
+            new = bal - c.amount if c.kind == "PAYMENT" else bal + c.amount
+            if (bal > 0 and new < 0) or (bal < 0 and new > 0):
                 self._block(turn, Pending("overpay", item, queue),
-                            R.ask_overpay(R.name_for(cust, lang), bal, c.amount, lang))
+                            R.ask_flip(R.name_for(cust, lang), bal, new, c.amount, c.kind, lang))
                 return True
         txn = self.ledger.record(cid, c.kind or "CREDIT", c.amount, c.date, session_id=self.id,
-                                 confidence=c.confidence)
+                                 confidence=c.confidence, txn_time=c.txn_time)
         self._wrote(turn, txn, "created")
         return False
 
@@ -346,7 +359,59 @@ class Session:
     def _txn_dict(self, t: Txn) -> dict:
         return {"id": t.id, "customer_id": t.customer_id, "customer": self._customer(t.customer_id).name,
                 "kind": t.kind, "amount_paise": t.amount_paise, "txn_date": t.txn_date, "status": t.status,
-                "replaces": t.replaces}
+                "replaces": t.replaces, "txn_time": t.txn_time}
+
+    # ---- end-of-day / any-day overview
+    def summary_parts(self, start, end, label, lang: str, intro: bool = False) -> list:
+        L = self.ledger
+        cr, n1 = L.sum_kind("CREDIT", start, end)
+        pay, n2 = L.sum_kind("PAYMENT", start, end)
+        get = L.total_outstanding()
+        owe, _ = L.total_owed_by_shop()
+        last = None
+        if start == end:
+            times = [e["txn_time"] for e in L.day_txns(start) if e.get("txn_time")]
+            last = max(times) if times else None
+        return R.closing_summary(label, start, cr, pay, n1 + n2, get, owe, last, lang, intro=intro)
+
+    # ---- reminders for the shopkeeper
+    def _step_alarm(self, item: Item, turn: _Turn) -> bool:
+        c = item.clause
+        lang = turn.lang
+        if c.alarm_at is None:
+            turn.parts += R.simple("alarm_need_time", lang)
+            return False
+        from .timeutil import now_ist
+        if c.alarm_at <= now_ist():
+            turn.parts += R.simple("alarm_past", lang)
+            return False
+        cid = None
+        if c.mention is not None and c.mention.known and len(c.mention.candidates) == 1:
+            cid = c.mention.candidates[0]
+        text = (c.alarm_text or "").strip() or "—"
+        aid = self.ledger.add_alarm(c.alarm_at, text, cid, session_id=self.id)
+        turn.events.append({"type": "alarm_set", "alarm": {"id": aid, "due_at": c.alarm_at.isoformat(), "text": text}})
+        turn.parts += R.simple("alarm_set", lang, d=R.Day(c.alarm_at.date()),
+                               tm=R.time_word(c.alarm_at.strftime("%H:%M"), lang), x=text)
+        return False
+
+    def _step_closing_time(self, item: Item, turn: _Turn) -> bool:
+        c = item.clause
+        lang = turn.lang
+        if not c.closing_time:
+            turn.parts += R.simple("alarm_need_time", lang)
+            return False
+        self.ledger.set_setting("closing_time", c.closing_time)
+        turn.events.append({"type": "settings", "closing_time": c.closing_time})
+        turn.parts += R.simple("closing_set", lang, tm=R.time_word(c.closing_time, lang))
+        return False
+
+    def push_reply(self, parts: list, lang: str | None = None) -> Reply:
+        """A reply Chotu starts by itself (alarm, closing summary): not tied to a user turn."""
+        lang = lang or (self.preferred if self.preferred != "auto" else self.lang)
+        disp, speak = R.render(parts, lang)
+        self.history.append(("agent", disp.strip()))
+        return Reply(disp.strip(), speak.strip(), lang, [], None, ["PUSH"], 0.0)
 
     # ---- ADD / RENAME customer
     def _created(self, cust, turn: _Turn) -> None:
@@ -427,13 +492,12 @@ class Session:
             total, n = L.sum_kind("PAYMENT", start, end)
             turn.parts += R.period_sum("PAYMENT", label, start, total, n, lang)
         elif q == "PERIOD_SUMMARY":
-            cr, _ = L.sum_kind("CREDIT", start, end)
-            pay, _ = L.sum_kind("PAYMENT", start, end)
-            turn.parts += R.period_summary(label, start, cr, pay, lang)
+            turn.parts += self.summary_parts(start, end, label, lang)
         elif q == "TOTAL_OUTSTANDING":
             bals = L.balances()
             owing = [b for b in bals.values() if b > 0]
-            turn.parts += R.total_outstanding(sum(owing), len(owing), lang)
+            owe = [-b for b in bals.values() if b < 0]
+            turn.parts += R.total_outstanding(sum(owing), len(owing), lang, sum(owe), len(owe))
         elif q == "TOP_DEBTORS":
             turn.parts += R.top_debtors(L.top_debtors(max(1, min(c.top_n or 1, 5))), lang)
         elif q == "CUSTOMER_COUNT":
@@ -622,6 +686,16 @@ class Session:
                 new_amt = bare[0].amount if bare else None
             if new_amt:
                 p.item.clause.amount = new_amt
+                p.item.confirmed = True
+                return resume()
+            if is_no:
+                return cancel()
+            return drop()
+
+        if p.kind == "need_kind":
+            kinds = [c.kind for c in clauses if c.kind in ("CREDIT", "PAYMENT")]
+            if kinds:
+                p.item.clause.kind, p.item.clause.kind_explicit = kinds[0], True
                 p.item.confirmed = True
                 return resume()
             if is_no:

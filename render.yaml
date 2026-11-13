@@ -27,6 +27,8 @@ services:
         value: https://api.groq.com/openai/v1
       - key: LLM_MODEL
         value: openai/gpt-oss-20b
+      - key: PICOVOICE_ACCESS_KEY
+        sync: false          # "Hey Chotu" wake word; the .ppn file goes in web/wake/
       - key: NLU_MODE
         value: llm
       - key: VOICE_MODE

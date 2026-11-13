@@ -105,3 +105,28 @@ def test_customer_rest_api(tmp_path, monkeypatch):
         assert cl.patch(f"/api/customers/{cid_}", json={"phone": "123"}).status_code == 400
         assert cl.delete(f"/api/customers/{cid_}").status_code == 200
         assert cl.get(f"/api/customers/{cid_}").status_code == 404
+
+
+def test_llm_cannot_swap_new_name_for_existing(session):
+    # LLM "fixes" Aniket into an existing customer: we must still treat Aniket as a new person
+    r = run(session, "Aniket ne 1500 ki shopping kari",
+            [{"intent": "TXN", "customer": "Amit Patel", "heard_name": "Aniket", "kind": "CREDIT", "amount_rupees": 1500}])
+    assert r.pending and r.pending["kind"] == "new_customer"
+    run(session, "haan", [{"intent": "YES"}])
+    a = session.ledger.find_by_name("Aniket")
+    assert a and session.ledger.balance(a.id) == 150000
+    assert session.ledger.balance(cid(session.ledger, "Amit Patel")) == 0
+
+
+def test_llm_spelling_fix_of_same_person_is_kept(session):
+    run(session, "Rames Kumaar ko 200 udhaar",
+        [{"intent": "TXN", "customer": "Ramesh Kumar", "heard_name": "Rames Kumaar", "kind": "CREDIT", "amount_rupees": 200}])
+    assert session.ledger.balance(cid(session.ledger, "Ramesh Kumar")) == 20000
+
+
+def test_llm_unclear_direction_is_asked(session):
+    r = run(session, "Suresh 500 credit",
+            [{"intent": "TXN", "customer": "Suresh Yadav", "heard_name": "Suresh", "kind": None, "amount_rupees": 500}])
+    assert r.pending and r.pending["kind"] == "need_kind"
+    run(session, "aapko mila", [{"intent": "TXN", "kind": "PAYMENT"}])
+    assert session.ledger.balance(cid(session.ledger, "Suresh Yadav")) == -50000

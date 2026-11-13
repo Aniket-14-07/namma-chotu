@@ -42,6 +42,11 @@ class Clause:
     new_kind: str | None = None
     ordinal: int | None = None
     confidence: float = 1.0
+    # time of day ("HH:MM") said for an entry; alarms; daily closing time
+    txn_time: str | None = None
+    alarm_at: object | None = None        # datetime (IST) for SET_ALARM
+    alarm_text: str | None = None
+    closing_time: str | None = None
     # customer management (LLM path): add / rename
     new_name: str | None = None
     name_hi: str | None = None
@@ -213,7 +218,23 @@ _AUX = {pkey(x) for x in ("tha", "thi", "the", "hai", "hain")}
 
 
 def _kind(keys: list[str], particle: str | None) -> tuple[str | None, bool]:
+    """CREDIT = you gave (they owe you more). PAYMENT = you got (they owe you less / you owe them).
+    Returns ("ASK", False) when only a direction-ambiguous word like "credit" was said."""
     ks = set(keys)
+    first = bool(ks & L.FIRST_PERSON)
+    # obligations: "isko 500 dena hai" (he has to pay) vs "mujhe isko 500 dena hai" (I have to pay)
+    if ks & L.OBLIG_COME:
+        return "CREDIT", True
+    if ks & L.OWE:                         # "Suresh owes 500" vs "I owe Suresh 500"
+        return ("PAYMENT" if ks & (L.FIRST_PERSON_EN | L.FIRST_PERSON) else "CREDIT"), True
+    if ks & L.OBLIG_GIVE:
+        return ("PAYMENT" if first else "CREDIT"), True
+    if ks & L.OBLIG_TAKE and not ks & L.TAKE_VERB - L.OBLIG_TAKE:
+        ko = particle in L.KO_SET or bool(ks & L.PRON_KO)
+        se = particle in L.SE_SET or bool(ks & L.PRON_SE)
+        if first or se or not ko:
+            return "CREDIT", True          # "isse 500 lena hai": I have to collect
+        return "PAYMENT", True             # "isko 500 lena hai": he has to collect from me
     strong_pay = bool(ks & L.PAYMENT_STRONG)
     strong_credit = bool(ks & L.CREDIT_STRONG)
     if strong_pay:
@@ -226,6 +247,8 @@ def _kind(keys: list[str], particle: str | None) -> tuple[str | None, bool]:
         return ("PAYMENT" if particle in L.SE_SET else "CREDIT"), True
     if ks & L.CREDIT_WEAK:
         return "CREDIT", True
+    if ks & L.AMBIG_DIRECTION:
+        return "ASK", False
     return None, False
 
 
@@ -246,6 +269,9 @@ def parse(text: str, customers, today: date) -> Parse:
     all_spans = find_numbers(tokens)
     # numbers that are day counts ("2 din pehle") are dates, not amounts
     spans = [s for s in all_spans if not (s.end < len(tokens) and pkey(tokens[s.end]) in L.DIN)]
+    # clock times ("shaam 5 baje") are not amounts and must not split the sentence
+    said_time, time_ids = spoken_time(tokens, spans)
+    spans = [s for s in spans if id(s) not in time_ids]
     mentions = find_mentions(tokens, customers)
     clauses: list[Clause] = []
     for a, b in _segments(tokens, spans, mentions):
@@ -253,6 +279,10 @@ def parse(text: str, customers, today: date) -> Parse:
         if c is not None:
             clauses.append(c)
     _attach_inline_corrections(clauses)
+    if said_time:
+        for c in clauses:
+            if c.intent == "TXN" and not c.txn_time:
+                c.txn_time = said_time
     return Parse(clauses=clauses, tokens=tokens, lang_hint=_lang_hint(text, tokens))
 
 
@@ -370,6 +400,26 @@ def _parse_segment(tokens, a, b, spans, mentions, today, all_spans=None) -> Clau
         c.amount = seg_spans[0].paise if seg_spans else None
         return c
 
+    # --- reminder for the shopkeeper himself: "mujhe 7 baje yaad dilana ..." -------------
+    if kset & L.REMINDER and (kset & (L.FIRST_PERSON | L.FIRST_PERSON_EN)):
+        seg_all = [x for x in (all_spans or spans) if a <= x.start < b]
+        tm, _ = spoken_time(tokens[a:b], [type(x)(x.start - a, x.end - a, x.paise, x.flags) for x in seg_all])
+        c.intent = "SET_ALARM"
+        if tm:
+            from datetime import datetime, time as dtime
+            from ..timeutil import IST
+            # for a reminder, "kal" means tomorrow
+            day = today + timedelta(days=1) if any(
+                pkey(t) in {pkey("kal"), pkey("tomorrow"), pkey("naale")} for t in tokens[a:b]) else today
+            hh, mm = (int(x) for x in tm.split(":"))
+            c.alarm_at = datetime.combine(day, dtime(hh, mm), tzinfo=IST)
+        drop = L.FIRST_PERSON | L.FIRST_PERSON_EN | L.REMINDER | L.BAJE | L.MORNING | L.NOON | L.EVENING | L.NIGHT \
+            | {pkey(x) for x in ("kal", "aaj", "tomorrow", "today", "naale", "ki", "ke", "ko", "dilana", "dilaana", "dila", "do", "dena", "karna", "please")}
+        words = [t for t in toks if pkey(t) not in drop and not t.isdigit()]
+        c.alarm_text = " ".join(words).strip() or " ".join(toks)
+        c.mention = seg_mentions[0] if seg_mentions else None
+        return c
+
     # --- reminder -------------------------------------------------------------------
     if kset & L.REMINDER:
         c.intent = "REMINDER"
@@ -380,6 +430,10 @@ def _parse_segment(tokens, a, b, spans, mentions, today, all_spans=None) -> Clau
     particle = _particle_after(tokens, mention)
     kind, kexp = _kind(keys, particle)
     is_query = bool(kset & (L.QUERY | L.TOP | L.MOST)) or (bool(kset & L.WHEN))
+    # "500 GPay kiya": 'kiya' sounds like 'kya'; a clear money verb + amount is an entry, not a question
+    if is_query and seg_spans and kset & (L.PAYMENT_STRONG | L.CREDIT_STRONG | L.OBLIG_GIVE) \
+            and not kset & (L.QUERY - {pkey("kya")}):
+        is_query = False
 
     # --- transaction --------------------------------------------------------------
     if seg_spans and not (is_query and (not kexp or kset & (L.TOP | L.MOST | L.QUERY))):
@@ -390,10 +444,13 @@ def _parse_segment(tokens, a, b, spans, mentions, today, all_spans=None) -> Clau
             kind, kexp = _kind(keys, particle)
         d, dexp, _ = _txn_date(tokens[a:b], [type(x)(x.start - a, x.end - a, x.paise, x.flags) for x in date_spans], today)
         # "2 din pehle": the 2 is a date, not the amount
-        amt_spans = [s for s in seg_spans if not (s.end < b and pkey(tokens[s.end]) in L.DIN)]
+        tm, time_ids = spoken_time(tokens, seg_spans)
+        amt_spans = [s for s in seg_spans if not (s.end < b and pkey(tokens[s.end]) in L.DIN) and id(s) not in time_ids]
         amt = max(amt_spans, key=lambda s: (s.has_currency, s.paise)) if len(amt_spans) > 1 else (amt_spans[0] if amt_spans else None)
         if amt is not None:
-            return _finish_txn(c, kind, kexp, amt, mention, d, dexp, today)
+            out = _finish_txn(c, kind, kexp, amt, mention, d, dexp, today)
+            out.txn_time = tm
+            return out
 
     # --- yes / greeting -------------------------------------------------------------
     if kset <= (L.YES | {pkey("ji"), pkey("bhai"), pkey("kar"), pkey("do"), pkey("de")}) and kset & L.YES:
@@ -478,9 +535,30 @@ def _parse_segment(tokens, a, b, spans, mentions, today, all_spans=None) -> Clau
     return c
 
 
+def spoken_time(tokens: list[str], spans) -> tuple[str | None, set[int]]:
+    """'shaam 5 baje' -> ('17:00', {index of the 5-span}). Bare 1-7 o'clock in a shop means PM."""
+    keys = [pkey(t) for t in tokens]
+    for s in spans:
+        if s.end < len(tokens) and keys[s.end] in L.BAJE:
+            h = int(s.paise // 100)
+            frac = s.paise % 100
+            if not 0 < h <= 24:
+                continue
+            m = 30 if frac == 50 else 0
+            before = set(keys[max(0, s.start - 2):s.start])
+            if before & L.MORNING:
+                h = h % 12
+            elif before & (L.EVENING | L.NIGHT | L.NOON) or keys[s.end] == pkey("pm"):
+                h = h % 12 + 12 if h < 12 else h
+            elif h <= 7:
+                h += 12
+            return f"{h % 24:02d}:{m:02d}", {id(s)}
+    return None, set()
+
+
 def _finish_txn(c: Clause, kind, kexp, amt: NumberSpan | None, mention, d, dexp, today) -> Clause:
     c.intent = "TXN"
-    c.kind = kind or "CREDIT"
+    c.kind = None if kind == "ASK" else (kind or "CREDIT")
     c.kind_explicit = bool(kexp)
     c.mention = mention
     c.date = d or today

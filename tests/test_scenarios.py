@@ -83,8 +83,7 @@ def test_ps_sentence_unpunctuated(session):
 def test_two_customers_one_breath(session):
     say(session, "Suresh ka teen sau chalis rupaye udhaar aur Rahul ne sau rupaye diye")
     assert bal(session.ledger, "Suresh Yadav") == 340
-    assert [t["kind"] for t in active(session.ledger, "Rahul Verma")] == []  # overpay -> asked first
-    say(session, "haan")
+    # Rahul was settled (0): getting 100 from him is not a flip, so it's written: you now owe him 100
     assert bal(session.ledger, "Rahul Verma") == -100
 
 
