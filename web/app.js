@@ -26,7 +26,7 @@ const S = {
 
 /* ---------------------------------------------------------------- language */
 const I18N = {
-  hi: { tag: "आपकी दुकान, आपकी आवाज़", first_entry: "आज की पहली एंट्री बोलिए", example: "“रमेश का 340 उधार”",
+  hi: { add: "जोड़ें", add_title: "नया ग्राहक", name: "नाम", phone: "फ़ोन (ज़रूरी नहीं)", save: "सेव करें", cancel: "रद्द", edit: "नाम/फ़ोन बदलें", edit_title: "ग्राहक बदलें", remove: "ग्राहक हटाएँ", remove_q: "इस ग्राहक को सूची से हटाएँ? पुराना हिसाब ऑडिट में रहेगा।", saved: "सेव हो गया", new_acct: "नया खाता", fix_name: "नाम ठीक करें", renamed: "नाम बदला", balance: "बाकी", tag: "आपकी दुकान, आपकी आवाज़", first_entry: "आज की पहली एंट्री बोलिए", example: "“रमेश का 340 उधार”",
     rem_title: "विनम्र याद-संदेश तैयार", rem_send: "WhatsApp पर भेजें", close: "बंद करें", d_credit: "आज उधार गया",
     d_paid: "आज जमा हुआ", d_out: "बाज़ार में बाकी", d_top: "सबसे ज़्यादा बाकी", d_today: "आज की एंट्री", search: "ग्राहक खोजें",
     type: "लिखें", hold: "दबाकर बोलिए", send: "भेजें", tab_bolo: "बोलो", tab_hisaab: "हिसाब", tab_khata: "खाता",
@@ -39,7 +39,7 @@ const I18N = {
     last_entry: "आख़िरी एंट्री", no_entry: "कोई एंट्री नहीं", adv_short: "एडवांस",
     optin: "ग्राहक ने याद-संदेश के लिए हाँ कहा है", src_seed: "पुरानी एंट्री", src_voice: "आवाज़ से", src_fix: "सुधार", src_ui: "हाथ से",
     mic_err: "माइक नहीं मिला। फ़ोन पर HTTPS लिंक खोलें और माइक की अनुमति दें।", ignored: "छोटू के लिए नहीं था, छोड़ दिया" },
-  kn: { tag: "ನಿಮ್ಮ ಅಂಗಡಿ, ನಿಮ್ಮ ಧ್ವನಿ", first_entry: "ಇವತ್ತಿನ ಮೊದಲ ಎಂಟ್ರಿ ಹೇಳಿ", example: "“ರಮೇಶ್ 340 ಉದ್ರಿ”",
+  kn: { add: "ಸೇರಿಸಿ", add_title: "ಹೊಸ ಗ್ರಾಹಕರು", name: "ಹೆಸರು", phone: "ಫೋನ್ (ಐಚ್ಛಿಕ)", save: "ಉಳಿಸಿ", cancel: "ರದ್ದು", edit: "ಹೆಸರು/ಫೋನ್ ಬದಲಿಸಿ", edit_title: "ಗ್ರಾಹಕರ ವಿವರ ಬದಲಿಸಿ", remove: "ಗ್ರಾಹಕರನ್ನು ತೆಗೆಯಿರಿ", remove_q: "ಈ ಗ್ರಾಹಕರನ್ನು ಪಟ್ಟಿಯಿಂದ ತೆಗೆಯಲೇ? ಹಳೆಯ ಲೆಕ್ಕ ಆಡಿಟ್‌ನಲ್ಲಿ ಇರುತ್ತದೆ.", saved: "ಉಳಿಸಲಾಗಿದೆ", new_acct: "ಹೊಸ ಖಾತೆ", fix_name: "ಹೆಸರು ಸರಿಪಡಿಸಿ", renamed: "ಹೆಸರು ಬದಲಾಯಿತು", balance: "ಬಾಕಿ", tag: "ನಿಮ್ಮ ಅಂಗಡಿ, ನಿಮ್ಮ ಧ್ವನಿ", first_entry: "ಇವತ್ತಿನ ಮೊದಲ ಎಂಟ್ರಿ ಹೇಳಿ", example: "“ರಮೇಶ್ 340 ಉದ್ರಿ”",
     rem_title: "ವಿನಯದ ನೆನಪಿನ ಸಂದೇಶ ಸಿದ್ಧ", rem_send: "WhatsApp ನಲ್ಲಿ ಕಳಿಸಿ", close: "ಮುಚ್ಚಿ", d_credit: "ಇವತ್ತು ಉದ್ರಿ",
     d_paid: "ಇವತ್ತು ಜಮಾ", d_out: "ಮಾರ್ಕೆಟ್‌ನಲ್ಲಿ ಬಾಕಿ", d_top: "ಅತಿ ಹೆಚ್ಚು ಬಾಕಿ", d_today: "ಇವತ್ತಿನ ಎಂಟ್ರಿಗಳು", search: "ಗ್ರಾಹಕರನ್ನು ಹುಡುಕಿ",
     type: "ಟೈಪ್", hold: "ಒತ್ತಿ ಹಿಡಿದು ಮಾತಾಡಿ", send: "ಕಳಿಸಿ", tab_bolo: "ಮಾತಾಡಿ", tab_hisaab: "ಲೆಕ್ಕ", tab_khata: "ಖಾತೆ",
@@ -52,7 +52,7 @@ const I18N = {
     last_entry: "ಕೊನೆಯ ಎಂಟ್ರಿ", no_entry: "ಎಂಟ್ರಿ ಇಲ್ಲ", adv_short: "ಮುಂಗಡ",
     optin: "ಗ್ರಾಹಕರು ನೆನಪಿನ ಸಂದೇಶಕ್ಕೆ ಒಪ್ಪಿದ್ದಾರೆ", src_seed: "ಹಳೆಯ ಎಂಟ್ರಿ", src_voice: "ಧ್ವನಿಯಿಂದ", src_fix: "ತಿದ್ದುಪಡಿ", src_ui: "ಕೈಯಿಂದ",
     mic_err: "ಮೈಕ್ ಸಿಗಲಿಲ್ಲ. ಫೋನ್‌ನಲ್ಲಿ HTTPS ಲಿಂಕ್ ತೆರೆಯಿರಿ ಮತ್ತು ಮೈಕ್ ಅನುಮತಿ ಕೊಡಿ.", ignored: "ಛೋಟುಗೆ ಅಲ್ಲ, ಬಿಟ್ಟೆ" },
-  en: { tag: "Your kirana, your voice", first_entry: "Say today's first entry", example: "“Ramesh, 340 credit”",
+  en: { add: "Add", add_title: "New customer", name: "Name", phone: "Phone (optional)", save: "Save", cancel: "Cancel", edit: "Edit name / phone", edit_title: "Edit customer", remove: "Remove customer", remove_q: "Remove this customer from the list? Their history stays in the audit log.", saved: "Saved", new_acct: "New account", fix_name: "Fix name", renamed: "Name changed", balance: "Due", tag: "Your kirana, your voice", first_entry: "Say today's first entry", example: "“Ramesh, 340 credit”",
     rem_title: "Polite reminder ready", rem_send: "Send on WhatsApp", close: "Close", d_credit: "Credit given today",
     d_paid: "Received today", d_out: "Pending in the market", d_top: "Highest dues", d_today: "Today's entries", search: "Find a customer",
     type: "Type", hold: "Hold and speak", send: "Send", tab_bolo: "Speak", tab_hisaab: "Summary", tab_khata: "Khata",
@@ -72,7 +72,7 @@ function applyI18n() {
   document.documentElement.lang = uiLang();
   document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = tr(el.dataset.i18n)));
   document.querySelectorAll("[data-i18n-ph]").forEach((el) => (el.placeholder = tr(el.dataset.i18nPh)));
-  $("#modeBtn").textContent = S.mode === "handsfree" ? tr("mode_hf") : tr("mode_ptt");
+  $("#modeBtn .lbl").textContent = S.mode === "handsfree" ? tr("mode_hf") : tr("mode_ptt");
   if (S.started) micState(restingHint());
 }
 function setLang(lang, fromUser) {
@@ -104,7 +104,7 @@ function onJson(m) {
     case "ready":
       S.live = m.live;
       setBadge(m.live ? "Live" : "Mock", m.live ? "live" : "mock");
-      if (!m.live) { $("#typeForm").hidden = false; $("#mic").disabled = true; micState("Mock mode: no Gnani key, type below"); }
+      if (!m.live) { $("#typeForm").hidden = false; $("#typeBtn").setAttribute("aria-pressed", "true"); $("#mic").disabled = true; micState("Mock mode: no Gnani key, type below"); }
       break;
     case "transcript":
       if (m.text) addFeed(m.text, m.typed ? "you typed" : "you");
@@ -222,7 +222,7 @@ function setMode(mode) {
   S.mode = mode;
   const hf = mode === "handsfree";
   $("#modeBtn").setAttribute("aria-pressed", String(hf));
-  $("#modeBtn").textContent = hf ? tr("mode_hf") : tr("mode_ptt");
+  $("#modeBtn .lbl").textContent = hf ? tr("mode_hf") : tr("mode_ptt");
   S.capturing = hf;
   S.muted = false;
   send({ type: "mode", mode });
@@ -245,7 +245,7 @@ function onReply(m) {
   const q = $("#question");
   if (m.pending) {
     q.hidden = false;
-    q.querySelector(".q-text").textContent = m.display;
+    q.querySelector(".q-text").textContent = "";   // the question is already the last chat bubble
     const box = q.querySelector(".q-options");
     box.innerHTML = "";
     const opts = m.pending.options.length ? m.pending.options.map((o) => [o.name, o.name])
@@ -265,8 +265,14 @@ function onReply(m) {
   const fresh = txns.filter((e) => e.action !== "voided");
   if (fresh.length) showEntry(fresh[fresh.length - 1].txn, txns.find((e) => e.action === "voided"));
   else if (txns.length) showEntry(txns[0].txn, null, true);
+  for (const e of m.events) {
+    if (e.type === "customer_created") addEditChip(e.customer, tr("new_acct"));
+    if (e.type === "customer_updated") { const n = $("#ledgerLine .who-name"); if (S.lineCust === e.customer.id) n.textContent = e.customer.name; }
+  }
+  if (m.events.some((e) => e.type.startsWith("customer_"))) refreshSoon();
   const rem = m.events.find((e) => e.type === "reminder");
   if (rem) showReminder(rem);
+  scrollChat();
   if (!S.live) setMic("", restingHint());
 }
 
@@ -276,7 +282,9 @@ async function showEntry(t, voided, removed) {
   void box.offsetWidth;
   box.classList.add("fresh");
   if (t.kind === "PAYMENT") box.classList.add("payment");
-  box.querySelector(".who").textContent = t.customer;
+  box.querySelector(".who-name").textContent = t.customer;
+  S.lineCust = t.customer_id;
+  $("#lineEdit").hidden = false;
   const amt = box.querySelector(".amt");
   amt.textContent = `${inr(t.amount_paise)} ${t.kind === "PAYMENT" ? tr("payment") : tr("credit")}`;
   if (removed) amt.innerHTML = `<span class="was">${inr(t.amount_paise)}</span> ${esc(tr("removed"))}`;
@@ -307,8 +315,31 @@ function addFeed(text, cls) {
   li.className = cls;
   li.textContent = text;
   const feed = $("#feed");
-  feed.prepend(li);
-  while (feed.children.length > 30) feed.lastChild.remove();
+  feed.append(li);
+  while (feed.children.length > 40) feed.firstChild.remove();
+  scrollChat();
+  return li;
+}
+function scrollChat() {
+  if (!$("#tab-bolo").classList.contains("active")) return;
+  requestAnimationFrame(() => { const m = $("#scroller"); m.scrollTop = m.scrollHeight; });
+}
+function addEditChip(cust, label) {
+  const li = addFeed("", "chip");
+  li.innerHTML = `<span>${esc(label)}: <strong>${esc(cust.name)}</strong></span>`;
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = "✎ " + tr("fix_name");
+  b.onclick = () => openEdit(cust.id);
+  li.appendChild(b);
+}
+let toastTimer = null;
+function toast(msg) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (t.hidden = true), 2200);
 }
 
 function showLatency(ms, where) {
@@ -366,22 +397,75 @@ function renderCustomers() {
     `<li><button class="rowbtn" data-id="${c.id}" type="button"><span class="n">${esc(c.name)}<span class="s">${c.last_txn_date ? tr("last_entry") + " " + dayLabel(c.last_txn_date) : tr("no_entry")}</span></span>
      <span class="m ${c.balance > 0 ? "c" : "p"}">${c.balance < 0 ? inr(-c.balance) + " " + tr("adv_short") : inr(c.balance)}</span></button></li>`).join("");
 }
+const sheet = {
+  open(html) { $("#custSheetBody").innerHTML = html; $("#custSheet").hidden = false; },
+  close() { $("#custSheet").hidden = true; $("#custSheetBody").innerHTML = ""; },
+};
+const balText = (b) => (b < 0 ? `${inr(-b)} ${tr("advance")}` : b > 0 ? inr(b) : tr("nothing_due"));
+
 async function openCustomer(id) {
-  const c = await (await fetch(`/api/customers/${id}`)).json();
-  const box = $("#custDetail");
-  box.hidden = false;
-  box.innerHTML = `<h3>${esc(c.name)} ${c.name_hi ? `<span class="s">${esc(c.name_hi)}</span>` : ""}</h3>
-    <p class="bal" style="color:${c.balance > 0 ? "var(--udhaar)" : "var(--jama)"}">${c.balance < 0 ? inr(-c.balance) + " " + tr("advance") : inr(c.balance)}</p>
-    <label><input type="checkbox" id="optin" ${c.reminder_opt_in ? "checked" : ""}> ${esc(tr("optin"))}</label>
+  const r = await fetch(`/api/customers/${id}`);
+  if (!r.ok) return refreshCustomers();
+  const c = await r.json();
+  sheet.open(`<div class="cust-head"><h3>${esc(c.name)}</h3>
+      ${c.name_hi ? `<p class="alt">${esc(c.name_hi)}</p>` : ""}
+      ${c.phone ? `<p class="phone">☎ ${esc(c.phone)}</p>` : ""}</div>
+    <p class="bal" style="color:${c.balance > 0 ? "var(--udhaar)" : "var(--jama)"}">${balText(c.balance)}</p>
+    <div class="actions"><button class="btn" id="cEdit" type="button">✎ ${esc(tr("edit"))}</button>
+      ${c.balance === 0 ? `<button class="btn danger" id="cRemove" type="button">${esc(tr("remove"))}</button>` : ""}</div>
+    <label class="optin"><input type="checkbox" id="optin" ${c.reminder_opt_in ? "checked" : ""}> ${esc(tr("optin"))}</label>
     <ol class="rows txns">${c.transactions.map((t) =>
       `<li class="${t.status === "voided" ? "void" : ""}"><span class="n">${dayLabel(t.txn_date)}<span class="s">${({ seed: tr("src_seed"), voice: tr("src_voice"), "voice-correction": tr("src_fix"), ui: tr("src_ui") })[t.source] || t.source}${t.status === "voided" ? ", " + tr("voided") : ""}</span></span>
-       <span class="m ${t.kind === "PAYMENT" ? "p" : "c"}">${t.kind === "PAYMENT" ? "−" : "+"}${inr(t.amount_paise)}</span></li>`).join("")}</ol>`;
-  box.querySelector("#optin").onchange = async (e) => {
+       <span class="m ${t.kind === "PAYMENT" ? "p" : "c"}">${t.kind === "PAYMENT" ? "−" : "+"}${inr(t.amount_paise)}</span></li>`).join("") || `<li class="empty-row">${tr("no_entry")}</li>`}</ol>`);
+  $("#cEdit").onclick = () => openEdit(id, c);
+  const rm = $("#cRemove");
+  if (rm) rm.onclick = async () => {
+    if (!confirm(tr("remove_q"))) return;
+    const res = await fetch(`/api/customers/${id}`, { method: "DELETE" });
+    if (res.ok) { sheet.close(); toast(tr("saved")); refreshAll(); }
+    else toast((await res.json()).detail || "Error");
+  };
+  $("#optin").onchange = async (e) => {
     await fetch(`/api/customers/${id}/opt-in`, { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ opt_in: e.target.checked }) });
     refreshCustomers();
   };
-  box.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function customerForm(title, c) {
+  return `<h3 style="margin:0 44px 4px 0">${esc(title)}</h3>
+    <form id="custForm" autocomplete="off">
+      <label class="field">${esc(tr("name"))}<input id="fName" required minlength="2" maxlength="60" value="${esc(c ? c.name : "")}" autocapitalize="words"></label>
+      <label class="field">${esc(tr("phone"))}<input id="fPhone" inputmode="tel" maxlength="14" value="${esc(c && c.phone ? c.phone : "")}"></label>
+      <p class="form-err" id="fErr"></p>
+      <div class="actions"><button class="btn primary" type="submit">${esc(tr("save"))}</button>
+        <button class="btn" type="button" id="fCancel">${esc(tr("cancel"))}</button></div>
+    </form>`;
+}
+async function saveCustomer(url, method, after) {
+  const body = { name: $("#fName").value.trim(), phone: $("#fPhone").value.trim() };
+  const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) { $("#fErr").textContent = typeof data.detail === "string" ? data.detail : "Please check the name and phone"; return; }
+  toast(tr("saved"));
+  await refreshAll();
+  after(data);
+}
+async function openEdit(id, c) {
+  if (!c) { const r = await fetch(`/api/customers/${id}`); if (!r.ok) return; c = await r.json(); }
+  sheet.open(customerForm(tr("edit_title"), c));
+  $("#fName").focus();
+  $("#fCancel").onclick = () => openCustomer(id);
+  $("#custForm").onsubmit = (e) => { e.preventDefault(); saveCustomer(`/api/customers/${id}`, "PATCH", (d) => {
+    if (S.lineCust === id) $("#ledgerLine .who-name").textContent = d.name;
+    openCustomer(id);
+  }); };
+}
+function openAdd() {
+  sheet.open(customerForm(tr("add_title"), null));
+  $("#fName").focus();
+  $("#fCancel").onclick = () => sheet.close();
+  $("#custForm").onsubmit = (e) => { e.preventDefault(); saveCustomer("/api/customers", "POST", (d) => openCustomer(d.id)); };
 }
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
@@ -408,7 +492,15 @@ function wire() {
     if (e.code === "Space" && document.activeElement.tagName !== "INPUT") pressEnd(e);
   });
   $("#modeBtn").onclick = () => setMode(S.mode === "ptt" ? "handsfree" : "ptt");
-  $("#typeBtn").onclick = () => { const f = $("#typeForm"); f.hidden = !f.hidden; if (!f.hidden) $("#typeInput").focus(); };
+  $("#typeBtn").onclick = () => {
+    const f = $("#typeForm"); f.hidden = !f.hidden;
+    $("#typeBtn").setAttribute("aria-pressed", String(!f.hidden));
+    if (!f.hidden) $("#typeInput").focus();
+  };
+  $("#addCustBtn").onclick = openAdd;
+  $("#lineEdit").onclick = () => S.lineCust && openEdit(S.lineCust);
+  $("#custSheet .sheet-x").onclick = () => sheet.close();
+  $("#custSheet").onclick = (e) => { if (e.target.id === "custSheet") sheet.close(); };
   $("#typeForm").onsubmit = (e) => { e.preventDefault(); submitText($("#typeInput").value); $("#typeInput").value = ""; };
   $("#reminderCard .r-close").onclick = () => ($("#reminderCard").hidden = true);
   $("#search").oninput = renderCustomers;
@@ -417,7 +509,7 @@ function wire() {
     b.onclick = () => {
       document.querySelectorAll(".tabs button").forEach((x) => x.classList.toggle("on", x === b));
       document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.id === `tab-${b.dataset.tab}`));
-      if (b.dataset.tab !== "bolo") refreshAll();
+      if (b.dataset.tab !== "bolo") refreshAll(); else scrollChat();
     };
   }
   for (const b of document.querySelectorAll(".langs button")) b.onclick = () => begin(b.dataset.lang);

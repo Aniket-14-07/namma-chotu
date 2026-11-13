@@ -91,7 +91,7 @@ class Ledger:
 
     def add_customer(self, name: str, name_hi: str | None = None, phone: str | None = None,
                      reminder_opt_in: bool = False, session_id: str | None = None) -> Customer:
-        name = " ".join(w.capitalize() if w.islower() else w for w in name.strip().split())
+        name = self.clean_name(name)
         c = self.db.crypto
         with self.db.transaction() as db:
             cur = db.conn.execute(
@@ -102,6 +102,53 @@ class Ledger:
             self._audit(db, "CUSTOMER_CREATED", None, cid, session_id, {"name": name})
         self.reload_customers()
         return self._customers[cid]
+
+    @staticmethod
+    def clean_name(name: str) -> str:
+        return " ".join(w.capitalize() if w.islower() else w for w in name.strip().split())
+
+    def find_by_name(self, name: str) -> Customer | None:
+        """Exact (case/space-insensitive) match on the full name, for duplicate checks."""
+        key = "".join(name.lower().split())
+        for c in self._customers.values():
+            if "".join(c.name.lower().split()) == key:
+                return c
+        return None
+
+    def update_customer(self, cid: int, *, name: str | None = None, name_hi: str | None = None,
+                        phone: str | None = None, clear_name_hi: bool = False,
+                        session_id: str | None = None) -> Customer:
+        if cid not in self._customers:
+            raise KeyError(cid)
+        old = self._customers[cid]
+        c = self.db.crypto
+        sets, params, details = [], [], {}
+        if name and self.clean_name(name) != old.name:
+            new = self.clean_name(name)
+            sets.append("name_enc=?"); params.append(c.enc(new)); details.update({"from": old.name, "to": new})
+            if not name_hi:
+                clear_name_hi = True        # old Devanagari spelling no longer matches
+        if name_hi:
+            sets.append("name_hi_enc=?"); params.append(c.enc(name_hi))
+        elif clear_name_hi:
+            sets.append("name_hi_enc=?"); params.append(None)
+        if phone is not None:
+            sets.append("phone_enc=?"); params.append(c.enc(phone or None))
+        if sets:
+            with self.db.transaction() as db:
+                db.conn.execute(f"UPDATE customers SET {', '.join(sets)} WHERE id=?", (*params, cid))
+                self._audit(db, "CUSTOMER_UPDATED", None, cid, session_id, details)
+            self.reload_customers()
+        return self._customers[cid]
+
+    def remove_customer(self, cid: int, session_id: str | None = None) -> None:
+        """Soft delete (hidden, history kept). Only allowed when nothing is due either way."""
+        if self.balance(cid) != 0:
+            raise ValueError("balance not zero")
+        with self.db.transaction() as db:
+            db.conn.execute("UPDATE customers SET active=0 WHERE id=?", (cid,))
+            self._audit(db, "CUSTOMER_REMOVED", None, cid, session_id, {})
+        self.reload_customers()
 
     def set_opt_in(self, cid: int, opt_in: bool) -> None:
         with self.db.transaction() as db:

@@ -1,0 +1,9 @@
+{
+  "name": "Namma Chotu — voice khata",
+  "short_name": "Namma Chotu",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#EEF4F0",
+  "theme_color": "#0E6B45",
+  "icons": [{"src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}]
+}

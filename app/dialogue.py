@@ -85,6 +85,13 @@ class Session:
         self.seen_utterances: deque[str] = deque(maxlen=200)
         self.lang = settings.greeting_language
         self.preferred = "auto"
+        self.history: deque[tuple[str, str]] = deque(maxlen=8)   # (user|agent, text) for the LLM
+
+    def llm_context(self) -> dict:
+        last = self._recent_customer()
+        return {"history": list(self.history),
+                "last_customer": self._customer(last).name if last and last in self.ledger._customers else None,
+                "pending": " ".join(str(x) for x in self.pending.question if isinstance(x, str)) if self.pending else None}
 
     # ------------------------------------------------------------------ public
     def set_language(self, lang: str) -> None:
@@ -130,6 +137,7 @@ class Session:
             return self._finish(turn, ["DUPLICATE"], t0)
         self.last_norm, self.last_norm_at = norm, now
 
+        self.history.append(("user", text))
         intents = [c.intent for c in clauses]
         handled = False
         if self.pending is not None:
@@ -174,6 +182,7 @@ class Session:
             turn.parts = R.disclosure(turn.lang) + turn.parts
             self.disclosed.add(turn.lang)
         disp, speak = R.render(turn.parts, turn.lang)
+        self.history.append(("agent", disp.strip()))
         pending = None
         if self.pending:
             p = self.pending
@@ -219,6 +228,10 @@ class Session:
             return self._step_undo(item, turn)
         if c.intent == "REMINDER":
             return self._step_reminder(item, queue, turn)
+        if c.intent == "ADD_CUSTOMER":
+            return self._step_add_customer(item, turn)
+        if c.intent == "RENAME_CUSTOMER":
+            return self._step_rename(item, queue, turn)
         if c.intent == "FUTURE":
             name = R.name_for(self._customer(c.mention.candidates[0]), lang) if c.mention and c.mention.known \
                 else R.t("someone", lang)
@@ -271,7 +284,10 @@ class Session:
                 turn.parts += R.simple("unknown_customer", lang, name=name)
                 return None
             if item.new_customer_ok:
-                cust = self.ledger.add_customer(name, session_id=self.id)
+                same = self.ledger.find_by_name(name)
+                if same:
+                    return same.id
+                cust = self.ledger.add_customer(name, name_hi=item.clause.name_hi, session_id=self.id)
                 turn.parts += R.simple("new_customer_created", lang, name=cust.name)
                 turn.events.append({"type": "customer_created", "customer": {"id": cust.id, "name": cust.name}})
                 return cust.id
@@ -331,6 +347,53 @@ class Session:
         return {"id": t.id, "customer_id": t.customer_id, "customer": self._customer(t.customer_id).name,
                 "kind": t.kind, "amount_paise": t.amount_paise, "txn_date": t.txn_date, "status": t.status,
                 "replaces": t.replaces}
+
+    # ---- ADD / RENAME customer
+    def _created(self, cust, turn: _Turn) -> None:
+        turn.events.append({"type": "customer_created", "customer": {"id": cust.id, "name": cust.name}})
+        self._touch_customer(cust.id, turn)
+
+    def _step_add_customer(self, item: Item, turn: _Turn) -> bool:
+        c = item.clause
+        lang = turn.lang
+        name = c.new_name or (c.mention.surface if c.mention else None)
+        if c.mention is not None and c.mention.known and len(c.mention.candidates) == 1 and not c.new_name:
+            turn.parts += R.simple("customer_exists", lang, name=R.name_for(self._customer(c.mention.candidates[0]), lang))
+            return False
+        if not name:
+            turn.parts += R.simple("need_customer_name", lang)
+            return False
+        same = self.ledger.find_by_name(name)
+        if same:
+            self._touch_customer(same.id, turn)
+            turn.parts += R.simple("customer_exists", lang, name=R.name_for(same, lang))
+            return False
+        cust = self.ledger.add_customer(name, name_hi=c.name_hi, phone=c.phone, session_id=self.id)
+        turn.parts += R.simple("new_customer_created", lang, name=R.name_for(cust, lang))
+        self._created(cust, turn)
+        return False
+
+    def _step_rename(self, item: Item, queue: list[Item], turn: _Turn) -> bool:
+        c = item.clause
+        lang = turn.lang
+        cid = self._resolve_customer(item, c.mention, queue, turn, allow_context=True, allow_new=False)
+        if cid is True:
+            return True
+        if cid is None:
+            turn.parts += R.simple("need_customer_name", lang)
+            return False
+        if not c.new_name:
+            turn.parts += R.simple("need_new_name", lang)
+            return False
+        other = self.ledger.find_by_name(c.new_name)
+        if other and other.id != cid:
+            turn.parts += R.simple("customer_exists", lang, name=R.name_for(other, lang))
+            return False
+        cust = self.ledger.update_customer(cid, name=c.new_name, name_hi=c.name_hi, session_id=self.id)
+        turn.events.append({"type": "customer_updated", "customer": {"id": cust.id, "name": cust.name}})
+        self._touch_customer(cid, turn)
+        turn.parts += R.simple("customer_renamed", lang, name=R.name_for(cust, lang))
+        return False
 
     # ---- QUERY
     def _step_query(self, item: Item, queue: list[Item], turn: _Turn) -> bool:
@@ -530,6 +593,13 @@ class Session:
             if is_yes:
                 p.item.new_customer_ok = True
                 return resume()
+            for c in clauses:
+                fixed = c.new_name if c.intent in ("ADD_CUSTOMER", "RENAME_CUSTOMER") else None
+                if fixed:
+                    p.item.clause.mention = Mention(0, 0, [], 0.0, known=False, surface=fixed)
+                    p.item.clause.name_hi = c.name_hi
+                    p.item.new_customer_ok = True
+                    return resume()
             for c in clauses:
                 m = c.new_mention or c.mention
                 if m is not None and m.known and len(m.candidates) == 1:

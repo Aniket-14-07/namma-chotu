@@ -2,12 +2,19 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#0E6B45">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Namma Chotu">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
 <title>Namma Chotu, voice khata</title>
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+<div class="app">
 <header class="top">
   <div class="brand">
     <span class="logo" aria-hidden="true">छो</span>
@@ -17,35 +24,36 @@
     </div>
   </div>
   <div class="status">
+    <span id="latency" class="latency" title="End of your speech to first reply audio" hidden></span>
+    <span id="modeBadge" class="badge">…</span>
     <select id="langSel" class="langsel" aria-label="Language">
       <option value="auto">Auto</option>
-      <option value="hi">हिंदी</option>
-      <option value="kn">ಕನ್ನಡ</option>
-      <option value="en">English</option>
+      <option value="hi">हिं</option>
+      <option value="kn">ಕನ್ನ</option>
+      <option value="en">EN</option>
     </select>
-    <span id="modeBadge" class="badge">connecting</span>
-    <span id="latency" class="latency" title="End of your speech to first reply audio" hidden></span>
   </div>
 </header>
 
-<main>
+<main id="scroller">
   <!-- BOLO: voice -->
   <section id="tab-bolo" class="tab active" aria-label="Bolo">
     <div id="ledgerLine" class="ledger-line empty" aria-live="polite">
       <div class="margin"></div>
       <div class="entry">
-        <p class="who" data-i18n="first_entry">Aaj ki pehli entry bolo</p>
+        <p class="who"><span class="who-name" data-i18n="first_entry">Aaj ki pehli entry bolo</span>
+          <button id="lineEdit" class="icon-btn small" type="button" aria-label="Edit name" hidden>✎</button></p>
         <p class="amt" data-i18n="example">"Ramesh ka 340 udhaar"</p>
         <p class="meta"></p>
       </div>
     </div>
 
+    <ol id="feed" class="feed" aria-live="polite"></ol>
+
     <div id="question" class="question" hidden>
       <p class="q-text"></p>
       <div class="q-options"></div>
     </div>
-
-    <ol id="feed" class="feed" aria-live="polite"></ol>
 
     <div id="reminderCard" class="reminder" hidden>
       <p class="r-title" data-i18n="rem_title">Polite reminder ready</p>
@@ -57,14 +65,14 @@
 
   <!-- HISAAB: dashboard -->
   <section id="tab-hisaab" class="tab" aria-label="Hisaab">
-    <div class="today">
-      <div class="stat credit"><p class="v" id="dCredit">—</p><p class="k" data-i18n="d_credit">Udhaar gaya aaj</p></div>
-      <div class="stat paid"><p class="v" id="dPaid">—</p><p class="k" data-i18n="d_paid">Jama hua aaj</p></div>
-    </div>
     <div class="outstanding">
       <p class="k" data-i18n="d_out">Market mein baaki</p>
       <p class="v" id="dOut">—</p>
       <p class="sub" id="dCust"></p>
+    </div>
+    <div class="today">
+      <div class="stat credit"><p class="v" id="dCredit">—</p><p class="k" data-i18n="d_credit">Udhaar gaya aaj</p></div>
+      <div class="stat paid"><p class="v" id="dPaid">—</p><p class="k" data-i18n="d_paid">Jama hua aaj</p></div>
     </div>
     <h2 data-i18n="d_top">Sabse zyada baaki</h2>
     <ol id="dTop" class="rows"></ol>
@@ -74,31 +82,53 @@
 
   <!-- KHATA: customers -->
   <section id="tab-khata" class="tab" aria-label="Khata">
-    <input id="search" class="search" type="search" placeholder="Grahak dhoondo" data-i18n-ph="search" autocomplete="off">
+    <div class="khata-bar">
+      <input id="search" class="search" type="search" placeholder="Grahak dhoondo" data-i18n-ph="search" autocomplete="off">
+      <button id="addCustBtn" class="add-btn" type="button"><span aria-hidden="true">＋</span> <span data-i18n="add">Add</span></button>
+    </div>
     <ol id="custList" class="rows"></ol>
-    <div id="custDetail" class="detail" hidden></div>
   </section>
 </main>
 
 <div class="dock">
-  <div class="controls">
-    <button id="modeBtn" class="pill" type="button" aria-pressed="false">Hold to talk</button>
-    <button id="typeBtn" class="pill ghost" type="button" data-i18n="type">Type</button>
-  </div>
-  <button id="mic" class="mic" type="button" aria-label="Hold and speak">
-    <span class="ring"></span>
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 1 0-7 0v6A3.5 3.5 0 0 0 12 15Zm6-3.5a.9.9 0 1 0-1.8 0 4.2 4.2 0 0 1-8.4 0 .9.9 0 1 0-1.8 0 6 6 0 0 0 5.1 5.93V20H8.7a.9.9 0 1 0 0 1.8h6.6a.9.9 0 1 0 0-1.8H12.9v-2.57A6 6 0 0 0 18 11.5Z"/></svg>
-  </button>
   <p id="micState" class="mic-state" data-i18n="hold">Daba ke bolo</p>
   <form id="typeForm" class="type-form" hidden>
     <input id="typeInput" type="text" placeholder="Ramesh ka 340 udhaar" autocomplete="off" enterkeyhint="send">
     <button type="submit" data-i18n="send">Send</button>
   </form>
+  <div class="talk-row">
+    <button id="typeBtn" class="side-btn" type="button" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm1 3v2h2V9H5Zm4 0v2h2V9H9Zm4 0v2h2V9h-2Zm4 0v2h2V9h-2ZM7 13v2h10v-2H7Z"/></svg>
+      <span class="lbl" data-i18n="type">Type</span>
+    </button>
+    <button id="mic" class="mic" type="button" aria-label="Hold and speak">
+      <span class="ring"></span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 1 0-7 0v6A3.5 3.5 0 0 0 12 15Zm6-3.5a.9.9 0 1 0-1.8 0 4.2 4.2 0 0 1-8.4 0 .9.9 0 1 0-1.8 0 6 6 0 0 0 5.1 5.93V20H8.7a.9.9 0 1 0 0 1.8h6.6a.9.9 0 1 0 0-1.8H12.9v-2.57A6 6 0 0 0 18 11.5Z"/></svg>
+    </button>
+    <button id="modeBtn" class="side-btn" type="button" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4h3l4 4V6L6 10H3Zm11.5 2a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4ZM12 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6Z"/></svg>
+      <span class="lbl">Hold to talk</span>
+    </button>
+  </div>
   <nav class="tabs">
-    <button data-tab="bolo" class="on" type="button" data-i18n="tab_bolo">Bolo</button>
-    <button data-tab="hisaab" type="button" data-i18n="tab_hisaab">Hisaab</button>
-    <button data-tab="khata" type="button" data-i18n="tab_khata">Khata</button>
+    <button data-tab="bolo" class="on" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"/></svg>
+      <span data-i18n="tab_bolo">Bolo</span></button>
+    <button data-tab="hisaab" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16v2H4v-2Zm1-2V9h3v9H5Zm5.5 0V4h3v14h-3Zm5.5 0v-6h3v6h-3Z"/></svg>
+      <span data-i18n="tab_hisaab">Hisaab</span></button>
+    <button data-tab="khata" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h11a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm2 4v2h7V6H8Zm0 4v2h7v-2H8Zm0 4v2h4v-2H8Z"/></svg>
+      <span data-i18n="tab_khata">Khata</span></button>
   </nav>
+</div>
+
+<!-- customer detail / edit / add: one bottom sheet -->
+<div id="custSheet" class="sheet" hidden>
+  <div class="sheet-body" role="dialog" aria-modal="true">
+    <button class="sheet-x icon-btn" type="button" aria-label="Close">✕</button>
+    <div id="custSheetBody"></div>
+  </div>
 </div>
 
 <div id="startSheet" class="sheet">
@@ -107,7 +137,7 @@
     <h2>Namaste! Main Namma Chotu hoon.</h2>
     <p>Main ek <strong>AI sahayak</strong> hoon. Aap bolo, main khata likhunga: udhaar, jama aur kiska kitna baaki hai.</p>
     <p class="fine">Demo mein sirf banawati (synthetic) grahak hain. Aawaz ke transcript encrypted rehte hain aur judging ke baad delete kiye jaate hain.</p>
-    <p class="pick">Apni bhasha chuniye / ನಿಮ್ಮ ಭಾಷೆ ಆರಿಸಿ / Choose your language. Ise upar kabhi bhi badal sakte hain.</p>
+    <p class="pick">Apni bhasha chuniye / ನಿಮ್ಮ ಭಾಷೆ ಆರಿಸಿ / Choose your language.</p>
     <div class="langs">
       <button class="start" type="button" data-lang="hi">हिंदी</button>
       <button class="start" type="button" data-lang="kn">ಕನ್ನಡ</button>
@@ -115,7 +145,8 @@
     </div>
   </div>
 </div>
-
+<div id="toast" class="toast" role="status" hidden></div>
+</div>
 <script src="/app.js"></script>
 </body>
 </html>

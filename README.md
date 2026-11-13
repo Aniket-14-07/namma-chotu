@@ -4,7 +4,8 @@
 
 - **Speech:** Gnani **Prisma v3.0** (streaming STT, WebSocket) and Gnani **Timbre v3.0** (streaming TTS, WebSocket)
 - **Orchestration:** custom asyncio orchestrator (no hosted agent platform in the loop)
-- **Brain:** a deterministic Hinglish/Devanagari parser plus a ledger engine. No LLM ever touches a balance.
+- **Brain:** an LLM (Groq `openai/gpt-oss-20b` by default, or xAI Grok; any OpenAI-compatible API) turns free speech plus the conversation so far into structured commands: credit, payment, loan, correction, undo, new customer, rename, questions. A deterministic ledger engine does all the money maths. No LLM ever touches a balance, and an amount the LLM "heard" that our own number parser didn't is confirmed out loud before it's written. If the LLM is slow or down, the rule parser takes the turn.
+- **Storage:** SQLite on a laptop, Postgres when hosted (data survives restarts). Customer names, phones and transcripts are encrypted at rest.
 - **Languages:** Hindi, Kannada and English, mixed freely in one sentence ("Ramesh ka munnooru nalavattu udhaar"). Replies come in the shopkeeper's language and script. Other Indic languages go to the optional LLM fallback.
 - **Device:** any browser, including low-end Android Chrome. Plain HTML/JS with no build step; push-to-talk or hands-free.
 
@@ -71,8 +72,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 Open http://localhost:8000 on the laptop.
 
-**Hosted link (Render, free):** dashboard.render.com, then New, then Blueprint, then pick this repo (it reads `render.yaml`). Paste `GNANI_API_KEY` when asked. You get an `https://….onrender.com` link that works on any phone (HTTPS, so the mic works). On the free tier the first visit after 15 idle minutes takes about 50 s to wake. Demo data resets on each deploy.
- On a phone the mic needs **HTTPS**, so tunnel it:
+**Hosted link (Render, free):** dashboard.render.com, then New, then Blueprint, then pick this repo (it reads `render.yaml`). Paste `GNANI_API_KEY` and `LLM_API_KEY` when asked. The blueprint also creates a free Postgres database, so the khata survives restarts. You get an `https://….onrender.com` link that works on any phone (HTTPS, so the mic works). On the free tier the first visit after 15 idle minutes takes about 50 s to wake.  On a phone the mic needs **HTTPS**, so tunnel it:
 
 ```bash
 cloudflared tunnel --url http://localhost:8000     # or: ngrok http 8000

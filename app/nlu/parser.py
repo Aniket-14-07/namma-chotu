@@ -42,6 +42,10 @@ class Clause:
     new_kind: str | None = None
     ordinal: int | None = None
     confidence: float = 1.0
+    # customer management (LLM path): add / rename
+    new_name: str | None = None
+    name_hi: str | None = None
+    phone: str | None = None
 
     @property
     def text(self) -> str:

@@ -23,7 +23,10 @@ WEB = ROOT / "web"
 
 
 def build_ledger() -> Ledger:
-    key = load_or_create_key(settings.ledger_key, Path(settings.db_path).parent / ".ledger_key")
+    if settings.db_path.startswith(("postgres://", "postgresql://")) and not settings.ledger_key:
+        raise RuntimeError("DATABASE_URL is set but LEDGER_KEY is empty: names would become unreadable after a restart")
+    key_dir = Path(settings.db_path).parent if not settings.db_path.startswith("postgres") else Path("data")
+    key = load_or_create_key(settings.ledger_key, key_dir / ".ledger_key")
     db = Database(settings.db_path, Crypto(key))
     ledger = Ledger(db)
     if os.getenv("SEED_DEMO", "1") == "1":
@@ -87,12 +90,58 @@ class NewCustomer(BaseModel):
     reminder_opt_in: bool = False
 
 
+def _phone(p: str | None) -> str | None:
+    if p is None:
+        return None
+    digits = "".join(ch for ch in p if ch.isdigit())
+    if digits and not 10 <= len(digits) <= 12:
+        raise HTTPException(400, "phone must be 10 digits")
+    return digits
+
+
 @app.post("/api/customers")
 def add_customer(body: NewCustomer):
-    if not body.name.strip():
+    name = " ".join(body.name.split())
+    if len(name) < 2:
         raise HTTPException(400, "name required")
-    c = L().add_customer(body.name, phone=body.phone, reminder_opt_in=body.reminder_opt_in)
+    if L().find_by_name(name):
+        raise HTTPException(409, f"{name} already has an account")
+    c = L().add_customer(name, phone=_phone(body.phone) or None, reminder_opt_in=body.reminder_opt_in,
+                         session_id="app")
     return L().customer_summary(c.id)
+
+
+class EditCustomer(BaseModel):
+    name: str | None = None
+    phone: str | None = None
+
+
+@app.patch("/api/customers/{cid}")
+def edit_customer(cid: int, body: EditCustomer):
+    led = L()
+    if cid not in {c.id for c in led.customers}:
+        raise HTTPException(404)
+    name = " ".join((body.name or "").split()) or None
+    if name is not None and len(name) < 2:
+        raise HTTPException(400, "name too short")
+    if name:
+        other = led.find_by_name(name)
+        if other and other.id != cid:
+            raise HTTPException(409, f"{name} already has an account")
+    led.update_customer(cid, name=name, phone=_phone(body.phone), session_id="app")
+    return led.customer_summary(cid)
+
+
+@app.delete("/api/customers/{cid}")
+def remove_customer(cid: int):
+    led = L()
+    if cid not in {c.id for c in led.customers}:
+        raise HTTPException(404)
+    try:
+        led.remove_customer(cid, session_id="app")
+    except ValueError:
+        raise HTTPException(409, "Settle the balance to zero before removing this customer")
+    return {"ok": True}
 
 
 class OptIn(BaseModel):

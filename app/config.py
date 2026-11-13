@@ -42,9 +42,12 @@ class Settings:
     llm_base_url: str = field(default_factory=lambda: os.getenv("LLM_BASE_URL", ""))
     llm_api_key: str = field(default_factory=lambda: os.getenv("LLM_API_KEY", ""))
     llm_model: str = field(default_factory=lambda: os.getenv("LLM_MODEL", ""))
-    llm_timeout_s: float = field(default_factory=lambda: float(os.getenv("LLM_TIMEOUT_S", "2.5")))
+    llm_timeout_s: float = field(default_factory=lambda: float(os.getenv("LLM_TIMEOUT_S", "3")))
+    # "llm" = LLM understands every turn (rule parser is the fallback). "rules" = rules first, LLM only if lost.
+    nlu_mode: str = field(default_factory=lambda: os.getenv("NLU_MODE", "llm"))
 
-    db_path: str = field(default_factory=lambda: os.getenv("DB_PATH", str(ROOT / "data" / "khata.db")))
+    # DATABASE_URL (Postgres) wins: data survives restarts and redeploys on free hosting.
+    db_path: str = field(default_factory=lambda: os.getenv("DATABASE_URL") or os.getenv("DB_PATH", str(ROOT / "data" / "khata.db")))
     ledger_key: str = field(default_factory=lambda: os.getenv("LEDGER_KEY", ""))
     # "low" = ask before writing only when unsure (default). "always" = ask before every write.
     confirm_mode: str = field(default_factory=lambda: os.getenv("CONFIRM_MODE", "low"))

@@ -290,9 +290,13 @@ class VoiceSession:
     async def process(self, text: str, lang: str | None, t_end: float | None, ids: list[str]) -> None:
         t0 = time.monotonic()
         clauses = None
-        parsed = parse(text, self.ledger.customers, today_ist())
-        if parsed.clauses and all(c.intent == "UNKNOWN" for c in parsed.clauses) and settings.llm_enabled:
-            clauses = await llm.extract(text, self.ledger.customers)
+        if settings.llm_enabled and settings.nlu_mode == "llm":
+            # LLM first (understands free-form speech + context); rule parser if it fails or times out
+            clauses = await llm.extract(text, self.ledger.customers, **self.dialogue.llm_context())
+        else:
+            parsed = parse(text, self.ledger.customers, today_ist())
+            if parsed.clauses and all(c.intent == "UNKNOWN" for c in parsed.clauses) and settings.llm_enabled:
+                clauses = await llm.extract(text, self.ledger.customers, **self.dialogue.llm_context())
         uid = "|".join(i for i in ids if i) or None
         reply = self.dialogue.handle(text, detected_lang=lang, utterance_id=uid, clauses=clauses)
         if reply is None:
@@ -303,7 +307,7 @@ class VoiceSession:
         except Exception:  # never let logging break a turn
             log.exception("transcript log failed")
         await self.deliver(reply, t_end, brain_ms=round((time.monotonic() - t0) * 1000, 1))
-        if any(e.get("type") == "customer_created" for e in reply.events) and self.stt:
+        if any(e.get("type") in ("customer_created", "customer_updated") for e in reply.events) and self.stt:
             try:
                 await self.stt.update_keyterms(self._keyterms())
             except Exception:
