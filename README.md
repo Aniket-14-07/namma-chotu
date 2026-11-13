@@ -8,10 +8,12 @@
 - **Money logic:** every entry is "you gave" (customer owes you more) or "you got" (owes you less / you owe them). Each person has one balance shown as *Lena hai ₹X* or *Dena hai ₹X*. The bare words "credit"/"debit" are never guessed: Chotu asks. A balance that would flip sides is always confirmed first.
 - **Time:** every entry is stamped with its time; "shaam 5 baje" sets it explicitly. Summaries work for any day ("kal ka hisaab", "12 tareekh ka hisaab"), and Hisaab shows today and yesterday.
 - **Reminders:** "mujhe shaam 7 baje yaad dilana …" (spoken + pop-up while the app is open), a daily closing summary at a set time, and polite WhatsApp reminders to customers.
-- **"Hey Chotu":** on-device wake word (Picovoice Porcupine), one command per wake with a loudness gate against background voices, then an 8 s follow-up window.
+- **"Hey Chotu":** wake word in Chrome/Edge (browser speech recognition, no account; Picovoice Porcupine on-device is used instead when a key is configured). One command per wake, with a loudness gate against background voices; Chotu keeps listening only if it asked a question.
+- **Voice conversation ("बात करो"):** a full-screen, ChatGPT-style voice mode: talk, hear the answer, talk again, nothing to read.
+- **Conversational:** small talk, the time, light shop and business questions get short natural answers; lists of customers, a day's entries or one customer's history are shown in full and summarised aloud.
 - **Storage:** SQLite on a laptop, Postgres when hosted (data survives restarts). Customer names, phones and transcripts are encrypted at rest.
 - **Languages:** Hindi, Kannada and English, mixed freely in one sentence ("Ramesh ka munnooru nalavattu udhaar"). Replies come in the shopkeeper's language and script. Other Indic languages go to the optional LLM fallback.
-- **Device:** any browser, including low-end Android Chrome. Plain HTML/JS with no build step; push-to-talk or hands-free.
+- **Device:** any browser, best in Chrome on Android. Installable mobile web app styled like a khata notebook; plain HTML/JS with no build step.
 
 ## For judges: try it in 2 minutes
 
@@ -41,8 +43,8 @@ flowchart LR
     VS[VoiceSession<br/>PTT commit · barge-in · latency]
     NLU[Parser<br/>romanise → numbers → clauses]
     DM[Dialogue state machine<br/>clarify · correct · undo · dedupe]
-    LED[(Ledger · SQLite<br/>integer paise · void+replace audit<br/>Fernet-encrypted names & transcripts)]
-    LLM[Optional LLM fallback<br/>structure only]
+    LED[(Ledger · Postgres / SQLite<br/>integer paise · void+replace audit<br/>Fernet-encrypted names & transcripts)]
+    LLM[LLM understanding · Groq<br/>structured commands only]
   end
   PRISMA[[Gnani Prisma v3.0<br/>wss stt/v3/stream]]
   TIMBRE[[Gnani Timbre v3.0<br/>wss api/v1/tts]]
@@ -50,7 +52,7 @@ flowchart LR
   VS -- PCM frames + commit --> PRISMA
   PRISMA -- speech_start / processing / transcript --> VS
   VS --> NLU --> DM --> LED
-  NLU -. unparsed utterance .-> LLM -.-> DM
+  VS -- free speech + context --> LLM --> DM
   DM -- reply text --> VS -- text --> TIMBRE
   TIMBRE -- base64 PCM chunks --> VS -- WebSocket binary --> SPK
   VS -- JSON events --> UI
@@ -62,7 +64,7 @@ flowchart LR
 
 | Service | Model | How we use it |
 |---|---|---|
-| Realtime STT `wss://api.vachana.ai/stt/v3/stream` | `prisma-v3.0` | Headers `language_code=hi-IN,kn-IN,en-IN`, `format=transcribe` (digits, Hindi in Devanagari, English in Latin), `keyterms` = customer names, VAD tuned per mode, `commit` on button release, `update_settings` bias when a customer is added, `detected_language_code` to answer in the shopkeeper's language |
+| Realtime STT `wss://api.vachana.ai/stt/v3/stream` | `prisma-v3.0` | Header `language_code` = the shopkeeper's chosen locale (`hi-IN` / `kn-IN` / `en-IN`, or `indic-auto`; the live API accepts one locale), `format=transcribe` (digits, Hindi in Devanagari, English in Latin), `keyterms` = customer names, VAD tuned per mode, `commit` on button release, `update_settings` bias when a customer is added, `detected_language_code` to answer in the shopkeeper's language |
 | Realtime TTS `wss://api.vachana.ai/api/v1/tts` | `timbre-v3.0` | Voice `Shivani`, `hi-IN` / `kn-IN` / `en-IN` (names transliterated to Kannada script so they're pronounced natively), raw PCM 16 kHz, warm socket per session. Barge-in closes the socket mid-stream (the API has no cancel message) and it reconnects for the next reply. Amounts are sent as words ("तीन सौ चालीस रुपये"). |
 
 No telephony, no phone numbers, no voice cloning.
@@ -91,11 +93,9 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 Open http://localhost:8000 on the laptop.
 
-**Hosted link (Render, free):** dashboard.render.com, then New, then Blueprint, then pick this repo (it reads `render.yaml`). Paste `GNANI_API_KEY` and `LLM_API_KEY` when asked. The blueprint also creates a free Postgres database, so the khata survives restarts. You get an `https://….onrender.com` link that works on any phone (HTTPS, so the mic works). On the free tier the first visit after 15 idle minutes takes about 50 s to wake.  On a phone the mic needs **HTTPS**, so tunnel it:
+Put `LLM_API_KEY` (Groq) in `.env` too; without it Chotu falls back to the rule parser and says so in the chat.
 
-```bash
-cloudflared tunnel --url http://localhost:8000     # or: ngrok http 8000
-```
+**Hosted (Render, free):** live at **https://namma-chotu.onrender.com/**. To deploy your own: dashboard.render.com → New → Blueprint → pick this repo (it reads `render.yaml`), paste `GNANI_API_KEY` and `LLM_API_KEY`. The blueprint also creates a free Postgres database, so the khata survives restarts. On the free tier the first visit after 15 idle minutes takes about 50 s to wake. To test a local run on a phone, the mic needs HTTPS: `cloudflared tunnel --url http://localhost:8000` (or `ngrok http 8000`).
 
 Without a key (`VOICE_MODE=mock`) the app runs in **mock mode**: typed text only, nothing spoken, and the header says so. It never pretends to be Gnani.
 
@@ -104,7 +104,8 @@ Without a key (`VOICE_MODE=mock`) the app runs in **mock mode**: typed text only
 - **Pick the shopkeeper's language** (हिंदी / ಕನ್ನಡ / English) on the start screen, or switch any time from the header. Chotu understands all three, mixed, whatever is picked. Replies and every screen label follow the chosen language. *Auto* replies in whichever language was spoken.
 
 - **Hold the green button and talk.** Release when done. Space bar works too on a laptop.
-- **Hands-free:** tap "Hold to talk" to switch. Start commands with **"Chotu, …"**, so customers chatting at the counter are ignored. Talking over the agent stops it (barge-in).
+- **"Hey Chotu":** the default mode in Chrome. Say it, wait for the beep, speak one command. Tapping the mic does the same.
+- **बात करो:** full-screen voice conversation; tap the orb to interrupt, ✕ to close.
 - Things to say:
   - `Ramesh ka 340 udhaar, kal 200 diya tha` (two entries; asks *"कौन से रमेश?"* because two Rameshes exist)
   - `nahi, 430` · `340 nahi 430 tha` · `Ramesh nahi Suresh` · `kal nahi, parso` · `udhaar nahi, jama tha`
@@ -112,13 +113,17 @@ Without a key (`VOICE_MODE=mock`) the app runs in **mock mode**: typed text only
   - `Ramesh Kumar ka total?` · `Aaj kitna udhaar gaya?` · `Is hafte kitne payments aaye?` · `Sabse zyada udhaar kispe hai?` · `Kitna paisa market mein pending hai?` · `Ramesh ka last payment kab aaya tha?`
   - `Gupta ji ko reminder bhejo` (only for customers who opted in; the shopkeeper taps to send it)
   - Kannada: `Ramesh Kumar munnooru nalavattu udri` · `Suresh ninne innooru kottru` · `illa, 430` · `Ramesh Kumar ottu eshtu baaki?` · `ivattu eshtu udri hoytu?`
-  - Guardrails: `Ramesh ko 500 pe byaaj lagao` is refused (no lending or interest) · `...warna police` is refused (no pressure language)
+  - Who owes whom: `isko 500 dena hai` / `iska 500 udhaar bacha hai` (they owe you) · `mujhe isko 500 dena hai` (you owe them) · `Suresh 500 credit` (asks)
+  - Lists and time: `sabka hisaab batao` · `aaj ki entries` · `Ramesh ka pura hisaab` · `abhi kitna baja hai`
+  - Reminders: `7:45 baje yaad dilana chai` · `roz raat 9 baje hisaab sunana`
+  - Customers: `naya customer Manjunath` · `naam galat hai, Bhaskar likho` · `Suresh ne saara udhaar chuka diya, unka naam hata do`
+  - Guardrails: `Ramesh ko 500 pe byaaj lagao` is refused (no interest calculations) · `...warna police` is refused (no pressure language)
 
 ## What makes the numbers trustworthy
 
 - **Every amount form in the PS:** `340`, `₹1,250`, `teen sau chaalis`, `three-forty`, `barah sau pachaas`, `do hazaar paanch sau`, all 99 Hindi number words in Devanagari, plus `dedh sau` (150), `dhai hazaar` (2500), `sadhe teen sau` (350), `sawa`/`paune`.
 - **Direction from grammar, not guesses:** `Ramesh ne 200 diye` is a payment and `Ramesh ko 200 ka saaman diya` is credit. `Gupta ji se 300 liye` is a payment.
-- **Never writes on:** a future promise (`kal 200 dega`), a negation (`paise nahi diye`), an unknown name (asks to create the account), an ambiguous name (asks which one), an overpayment (asks before recording an advance), or a huge or unclear amount (asks).
+- **Never writes on:** a future promise (`kal 200 dega`), a negation (`paise nahi diye`), an unknown name (asks to create the account; the LLM cannot swap a new name for a similar existing customer), an ambiguous name (asks which one), a bare "credit"/"debit" (asks: diya ya mila?), a balance about to flip sides (asks), or a huge or unclear amount (asks).
 - **Commit and read back:** an entry is written immediately and spoken back. A correction voids the old row and writes a replacement, so the audit trail keeps both.
 - Every balance and dashboard figure is a SQL aggregate over integer paise.
 
@@ -126,18 +131,19 @@ Without a key (`VOICE_MODE=mock`) the app runs in **mock mode**: typed text only
 
 | Baseline | Where |
 |---|---|
-| AI disclosure in the first turn, in the user's language | Greeting says "मैं … एक AI सहायक हूँ". If the shopkeeper switches language, the first reply in the new language says it again (`dialogue.py`). |
+| AI disclosure in the first turn, in the user's language | The greeting says "मैं … एक AI सहायक हूँ" in the chosen language (`dialogue.py`). Switching language later is silent. |
 | Synthetic data only | `app/seed.py` uses fictional customers and `98765 000xx` numbers |
 | Encrypted at rest | Names, phones, notes, transcripts, reminder texts and audit details are Fernet-encrypted in SQLite (`app/db.py`) |
 | Transcripts deleted after judging | `python scripts/purge_transcripts.py` or `POST /api/admin/purge-transcripts` |
-| No lending, no pressure, opt-in reminders | Interest and loan requests are refused by voice, and threat-like wording is refused. No loan features. Reminder text is fixed and polite, refused for non-opted-in customers, and never auto-sent: the shopkeeper taps WhatsApp. |
+| No interest, no pressure, opt-in reminders | Interest calculations are refused and threat-like wording is refused. Cash lent to a customer is recorded as a plain "you gave" entry. Reminder text is fixed and polite, refused for non-opted-in customers, and never auto-sent: the shopkeeper taps WhatsApp. |
 | Secrets | `.env` is gitignored; the key never reaches the browser |
 | No voice cloning | Stock Timbre v3.0 voice |
 
 ## Tests
 
 ```bash
-pytest -q          # 137 tests: numbers (Hindi/Kannada/English), judge scenarios, Kannada, guardrails, end-to-end voice loop
+pytest -q          # 213 tests: numbers, who-owes-whom phrasing (Hindi/Kannada/English), LLM path, reminders, lists, guardrails, end-to-end voice loop
+TEST_DATABASE_URL=postgresql://… pytest -q     # the same suite against Postgres
 ```
 
 `tests/test_voice_pipeline.py` runs the full loop (browser WebSocket → orchestrator → STT adapter → ledger → TTS adapter → browser) against `tests/fake_gnani.py`, a local server built from Gnani's documented wire format. It covers frame sizes, commit, base64 chunks with WAV headers and barge-in. **It is not Gnani.** Real-service verification is `scripts/smoke_*.py` plus the manual checklist in `docs/VOICE_TEST_CHECKLIST.md`. Kannada and Hindi wording review: `docs/LANGUAGE_REVIEW.md`.
@@ -146,7 +152,8 @@ pytest -q          # 137 tests: numbers (Hindi/Kannada/English), judge scenarios
 
 `customers(id, name_enc, name_hi_enc, phone_enc, reminder_opt_in, created_at, active)`
 `transactions(id, customer_id, kind CREDIT|PAYMENT, amount_paise >0, txn_date IST, created_at, status active|voided, void_reason, replaced_by, replaces, source, session_id, utterance_id, confidence, note_enc)`
-`audit_log(id, ts, action, txn_id, customer_id, session_id, details_enc)` · `transcripts(…, text_enc, lang, latency_ms)` · `reminders(…, message_enc, status)`
+`audit_log(id, ts, action, txn_id, customer_id, session_id, details_enc)` · `transcripts(…, text_enc, lang, latency_ms)` · `reminders(…, message_enc, status)` · `alarms(id, due_at, text_enc, customer_id, status)` · `app_settings(key, value)`
+`transactions` also has `txn_time` (HH:MM IST).
 
 ## Project layout
 
@@ -158,9 +165,9 @@ app/
   gnani/tts.py       Timbre v3.0 WebSocket adapter
   nlu/               romanise · numbers · names · lexicon · parser
   dialogue.py        state machine (clarify / correct / undo / dedupe / disclosure)
-  ledger.py db.py    money engine + encrypted SQLite
+  ledger.py db.py    money engine + encrypted storage (SQLite or Postgres)
   responses.py numwords.py   Hindi/English replies, amounts as words
-  llm.py             optional structure-only fallback
+  llm.py             LLM understanding (Groq / any OpenAI-compatible API), structure only
 web/                 index.html · app.js · pcm-worklet.js · styles.css
 scripts/             smoke_tts.py · smoke_stt.py · chat.py (text REPL) · purge_transcripts.py
 tests/
