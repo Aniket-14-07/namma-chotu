@@ -104,7 +104,7 @@ function onJson(m) {
     case "ready":
       S.live = m.live;
       S.wakeCfg = m.wake || null;
-      if (S.wakeCfg && S.live && S.mode === "ptt" && !S.wakeTried) { S.wakeTried = true; if (S.started) setMode("wake"); }
+      if (wakeAvailable() && S.live && S.mode === "ptt" && !S.wakeTried) { S.wakeTried = true; if (S.started) setMode("wake"); }
       setBadge(m.live ? "Live" : "Mock", m.live ? "live" : "mock");
       if (!m.live) { $("#typeForm").hidden = false; $("#typeBtn").setAttribute("aria-pressed", "true"); $("#mic").disabled = true; micState("Mock mode: no Gnani key, type below"); }
       break;
@@ -194,7 +194,7 @@ function playPcm(buf) {
     S.waitingFirstAudio = false;
     showLatency(Math.round(performance.now() - S.releaseAt + (at - S.ctx.currentTime) * 1000), "phone");
   }
-  if (!S.speaking) { S.speaking = true; if (!S.capturing || S.mode === "handsfree") setMic("speaking", tr("speaking")); }
+  if (!S.speaking) { if (S.pv && S.mode === "wake") S.pv.pause(); S.speaking = true; if (!S.capturing || S.mode === "handsfree") setMic("speaking", tr("speaking")); }
 }
 
 function stopPlayback() {
@@ -213,9 +213,46 @@ function stopPlayback() {
 function loadScript(src) {
   return new Promise((ok, bad) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); });
 }
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const wakeAvailable = () => Boolean(S.wakeCfg || SR);
+// words the recognisers return for "Chotu" in Hindi / Kannada / English
+const WAKE_RE = /(chh?ott?[ou]o?|chotu|choto|छोटू|छोटु|छोटो|ಛೋಟು|ಚೋಟು|ಛೋಟೂ)/i;
+
+/* Fallback wake word without any account: the browser's own speech recogniser (Chrome / Edge / Android).
+   It listens for "Chotu" in short bursts and restarts itself; it pauses while Chotu is talking
+   (so Chotu's own name in a reply can't wake it) and while a command is being captured. */
+function initWebSpeechWake() {
+  if (!SR) return false;
+  const rec = new SR();
+  rec.lang = "hi-IN";
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.maxAlternatives = 3;
+  const eng = { kind: "webspeech", rec, running: false, dead: false, quietUntil: 0 };
+  rec.onresult = (e) => {
+    if (S.mode !== "wake" || S.wakeTurn || S.speaking || performance.now() < eng.quietUntil) return;
+    for (let i = e.resultIndex; i < e.results.length; i++)
+      for (let j = 0; j < e.results[i].length; j++)
+        if (WAKE_RE.test(e.results[i][j].transcript)) { eng.pause(); onWake(); return; }
+  };
+  rec.onend = () => { eng.running = false; setTimeout(() => eng.resume(), 300); };
+  rec.onerror = (e) => {
+    if (e.error === "not-allowed" || e.error === "service-not-allowed") { eng.dead = true; addFeed(tr("wake_err"), "err"); }
+  };
+  eng.resume = () => {
+    if (eng.dead || eng.running || S.mode !== "wake" || S.wakeTurn || S.speaking) return;
+    try { rec.start(); eng.running = true; } catch (_) {}
+  };
+  eng.pause = () => { try { rec.abort(); } catch (_) {} eng.running = false; };
+  eng.process = () => {};
+  S.pv = eng;
+  eng.resume();
+  return true;
+}
+
 async function initWake() {
   if (S.pv) return true;
-  if (!S.wakeCfg) return false;
+  if (!S.wakeCfg) return initWebSpeechWake();
   try {
     if (!window.PorcupineWeb) await loadScript("/vendor/porcupine-web.min.js");
     const c = S.wakeCfg;
@@ -225,6 +262,8 @@ async function initWake() {
       () => onWake(),
       { publicPath: c.model_url, forceWrite: true },
       { processErrorCallback: (err) => console.warn("porcupine", err) });
+    S.pv.pause = () => {};
+    S.pv.resume = () => {};
     return true;
   } catch (err) {
     console.warn("wake init failed", err);
@@ -253,7 +292,7 @@ function onWakeFrame(buf) {
   if (!w) {
     S.floorBuf.push(db);
     if (S.floorBuf.length > 120) S.floorBuf.shift();            // ~4 s of shop noise
-    if (S.pv && !S.speaking) S.pv.process(frame);
+    if (S.pv && S.pv.kind !== "webspeech" && !S.speaking) S.pv.process(frame);
     return;
   }
   // capturing one command: gate = shop noise + 12 dB (someone close to the phone)
@@ -276,6 +315,7 @@ function beep() {
 function onWake(followUp = false) {
   if (S.mode !== "wake" || S.wakeTurn) return;
   if (!followUp) { stopPlayback(); send({ type: "interrupt" }); beep(); if (navigator.vibrate) navigator.vibrate(20); }
+  if (S.pv) S.pv.pause();
   S.wakeTurn = { start: performance.now(), heard: false, lastLoud: 0, run: 0, wait: followUp ? 8000 : 5000, followUp };
   S.capturing = true;
   send({ type: "ptt_down", wake: true });
@@ -288,9 +328,10 @@ function endWakeTurn() {
   S.releaseAt = performance.now();
   send({ type: "ptt_up" });
   if (w && w.heard) { S.turnOpen = true; S.waitingFirstAudio = true; S.lastWake = true; setMic("thinking", tr("thinking")); }
-  else { S.lastWake = false; restMic(); }
+  else { S.lastWake = false; restMic(); if (S.pv) setTimeout(() => S.pv.resume(), 300); }
 }
 function afterReplyDone() {
+  if (S.mode === "wake" && S.pv) { S.pv.quietUntil = performance.now() + 800; setTimeout(() => S.pv && !S.wakeTurn && S.pv.resume(), 900); }
   if (S.mode !== "wake" || !S.lastWake || S.wakeTurn) return;
   S.lastWake = false;                 // one follow-up window per reply
   setTimeout(() => onWake(true), 250);
@@ -321,6 +362,8 @@ function pressEnd(e) {
 function setMode(mode) {
   if (mode === "wake" && !S.pv) { initWake().then((ok) => ok ? setMode("wake") : micState(tr("wake_err"))); return; }
   S.mode = mode;
+  if (mode !== "wake" && S.pv) S.pv.pause();
+  if (mode === "wake" && S.pv) setTimeout(() => S.pv.resume(), 200);
   const hf = mode === "handsfree";
   $("#modeBtn").setAttribute("aria-pressed", String(mode !== "ptt"));
   $("#modeBtn .lbl").textContent = modeLabel(mode);
@@ -638,7 +681,7 @@ function wire() {
   document.addEventListener("keyup", (e) => {
     if (e.code === "Space" && document.activeElement.tagName !== "INPUT") pressEnd(e);
   });
-  $("#modeBtn").onclick = () => setMode(S.mode !== "ptt" ? "ptt" : (S.wakeCfg ? "wake" : "handsfree"));
+  $("#modeBtn").onclick = () => setMode(S.mode !== "ptt" ? "ptt" : (wakeAvailable() ? "wake" : "handsfree"));
   $("#typeBtn").onclick = () => {
     const f = $("#typeForm"); f.hidden = !f.hidden;
     $("#typeBtn").setAttribute("aria-pressed", String(!f.hidden));
@@ -677,7 +720,7 @@ function wire() {
     S.started = true;
     try { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); } catch (_) {}
     send({ type: "start", mode: S.mode === "handsfree" ? "handsfree" : "ptt", lang });
-    if (S.wakeCfg && S.live && S.mode === "ptt") setMode("wake");
+    if (wakeAvailable() && S.live && S.mode === "ptt") setMode("wake");
     refreshAll();
   }
 }

@@ -306,6 +306,16 @@ class VoiceSession:
         if not parts:
             await self.send({"type": "no_speech", "quiet": getattr(self, "wake_turn", False)})
             return
+        if self.wake_turn:
+            # "Hey Chotu, Suresh ka 500" said in one breath: drop the wake words from the command
+            joined = " , ".join(parts)
+            found, rest = self._addressed(joined)
+            words = joined.split()
+            if found and rest != joined and any(pkey(t) in WAKE for t in tokenize(" ".join(words[:3]))):
+                parts = [rest] if rest.strip() else []
+                if not parts:
+                    await self.send({"type": "no_speech", "quiet": True})
+                    return
         if getattr(self, "wake_turn", False) and self._is_noise(" ".join(parts)):
             await self.send({"type": "ignored", "text": " ".join(parts), "reason": "too short, probably background"})
             return
