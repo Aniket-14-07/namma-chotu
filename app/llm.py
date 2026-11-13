@@ -32,9 +32,20 @@ from .timeutil import month_start, today_ist, week_start
 log = logging.getLogger("llm")
 
 INTENTS = {"TXN", "QUERY", "CORRECTION", "UNDO", "YES", "NO", "ADD_CUSTOMER", "RENAME_CUSTOMER",
-           "GREETING", "FUTURE", "REMINDER", "SET_ALARM", "CLOSING_TIME", "UNKNOWN"}
+           "GREETING", "FUTURE", "REMINDER", "SET_ALARM", "CLOSING_TIME", "CHAT", "UNKNOWN"}
 QUERIES = {"BALANCE", "LAST_PAYMENT", "LAST_CREDIT", "PERIOD_CREDIT", "PERIOD_PAYMENTS", "PERIOD_SUMMARY",
-           "TOTAL_OUTSTANDING", "TOP_DEBTORS", "CUSTOMER_COUNT"}
+           "TOTAL_OUTSTANDING", "TOP_DEBTORS", "CUSTOMER_COUNT", "LIST_CUSTOMERS", "LIST_ENTRIES", "CUSTOMER_HISTORY"}
+
+_client: httpx.AsyncClient | None = None
+
+
+def _http() -> httpx.AsyncClient:
+    """One kept-alive client: reusing the TLS connection saves a few hundred ms per turn."""
+    global _client
+    if _client is None:
+        _client = httpx.AsyncClient(timeout=settings.llm_timeout_s,
+                                    limits=httpx.Limits(max_keepalive_connections=4, keepalive_expiry=120))
+    return _client
 
 SYSTEM = """You are the language-understanding module of "Namma Chotu", a voice khata (credit ledger) for Indian kirana shops.
 The shopkeeper speaks Hindi, Kannada, English or a mix, in any script; speech-to-text may misspell words and names.
@@ -43,7 +54,8 @@ answers to the assistant's last question, and follow-ups like "aur 200".
 
 Return ONLY this JSON:
 {"commands":[{
- "intent": "TXN|QUERY|CORRECTION|UNDO|YES|NO|ADD_CUSTOMER|RENAME_CUSTOMER|GREETING|FUTURE|REMINDER|SET_ALARM|CLOSING_TIME|UNKNOWN",
+ "intent": "TXN|QUERY|CORRECTION|UNDO|YES|NO|ADD_CUSTOMER|RENAME_CUSTOMER|GREETING|FUTURE|REMINDER|SET_ALARM|CLOSING_TIME|CHAT|UNKNOWN",
+ "reply": string|null,           // CHAT / GREETING / UNKNOWN only: what Chotu says back (see Conversation)
  "customer": string|null,        // customer name (Latin letters); null if not said
  "heard_name": string|null,      // the name as literally heard in the utterance
  "customer_ref": "named|previous|none",  // previous = pronoun / the customer just discussed
@@ -54,7 +66,7 @@ Return ONLY this JSON:
  "time": "HH:MM"|null,           // 24h clock time said for the entry ("shaam 5 baje" = "17:00"); null if not said
  "alarm_at": "YYYY-MM-DDTHH:MM"|null, // SET_ALARM: when to remind (for reminders "kal" = tomorrow)
  "alarm_text": string|null,      // SET_ALARM: what to remind about, short, in the shopkeeper's language
- "query": "BALANCE|LAST_PAYMENT|LAST_CREDIT|PERIOD_CREDIT|PERIOD_PAYMENTS|PERIOD_SUMMARY|TOTAL_OUTSTANDING|TOP_DEBTORS|CUSTOMER_COUNT"|null,
+ "query": "BALANCE|LAST_PAYMENT|LAST_CREDIT|PERIOD_CREDIT|PERIOD_PAYMENTS|PERIOD_SUMMARY|TOTAL_OUTSTANDING|TOP_DEBTORS|CUSTOMER_COUNT|LIST_CUSTOMERS|LIST_ENTRIES|CUSTOMER_HISTORY"|null,
  "period": "today|yesterday|this_week|this_month"|null,
  "new_name": string|null,        // ADD_CUSTOMER / RENAME_CUSTOMER: the correct full name, Latin letters, Title Case
  "name_hi": string|null,         // the same customer name written in Devanagari (for natural Hindi speech)
@@ -80,6 +92,20 @@ Names:
 - "heard_name": the name exactly as it appears in the utterance (Latin letters), or null. Never replace a NEW name with a different known one:
   if "Aniket" is said and only "Ankit"/"Amit" exist, customer = "Aniket" (a new person), not Ankit.
 
+Conversation (you are Chotu, a friendly, quick kirana-shop assistant with a brain, not a form):
+- Small talk, the time or date, how the app works, light shop/business talk (stock, festivals, handling customers, saving
+  money, simple tips) = CHAT with a short spoken "reply": 1-2 sentences, warm, natural, in the SAME language and script
+  the shopkeeper used (Hindi in Devanagari, Kannada in Kannada script, English). Gently steer back to the khata when natural.
+- "Abhi kitna baja hai / time kya hai" = CHAT; answer from the "Now" line.
+- Never state ledger numbers (balances, totals, entries) in "reply": those come only from QUERY.
+- Not a shop matter at all (politics, medical, legal, coding...): CHAT, politely say you only help with the shop.
+- If the sentence is garbled or you are unsure what was meant, CHAT with a short clarifying question, never UNKNOWN.
+
+Lists:
+- "List do / sabka hisaab / kis kis ka baaki hai / customers ki list / sab grahak" = QUERY LIST_CUSTOMERS.
+- "Aaj ki entries / kal kya kya hua / entries ki list" = QUERY LIST_ENTRIES with period or date.
+- "Ramesh ka pura hisaab / Ramesh ki entries" = QUERY CUSTOMER_HISTORY with customer.
+
 Other rules:
 - "Kitna baaki hai / eshtu baaki / how much does X owe" = QUERY BALANCE. "Aaj ka hisaab / sales / ವ್ಯಾಪಾರ / summary" = QUERY PERIOD_SUMMARY (period today unless said).
   "Total kitna udhaar hai bazaar mein" = TOTAL_OUTSTANDING. "Sabse zyada kiska baaki" = TOP_DEBTORS.
@@ -99,7 +125,8 @@ Other rules:
 - Several actions in one sentence -> several commands, in order."""
 
 
-def _ctx_lines(history: list[tuple[str, str]], last_customer: str | None, pending: str | None) -> str:
+def _ctx_lines(history: list[tuple[str, str]], last_customer: str | None, pending: str | None,
+               lang: str | None = None) -> str:
     lines = []
     for role, text in history[-6:]:
         lines.append(f"{'Shopkeeper' if role == 'user' else 'Assistant'}: {text}")
@@ -108,18 +135,21 @@ def _ctx_lines(history: list[tuple[str, str]], last_customer: str | None, pendin
         out += f"\nCustomer just discussed: {last_customer}"
     if pending:
         out += f"\nThe assistant is waiting for an answer to: {pending}"
+    if lang in ("hi", "kn", "en"):
+        out += f"\nShopkeeper's chosen language: {dict(hi='Hindi', kn='Kannada', en='English')[lang]} (write any reply in it)"
     return out
 
 
 async def extract(text: str, customers, *, history: list[tuple[str, str]] | None = None,
-                  last_customer: str | None = None, pending: str | None = None) -> list[Clause] | None:
+                  last_customer: str | None = None, pending: str | None = None,
+                  lang: str | None = None) -> list[Clause] | None:
     if not settings.llm_enabled:
         return None
     names = ", ".join(c.name for c in customers)[:3000]
     from .timeutil import now_ist
     now = now_ist()
     user = (f"Now: {now.strftime('%A %Y-%m-%d %H:%M')} (IST)\nKnown customers: {names or '(none yet)'}\n"
-            f"{_ctx_lines(history or [], last_customer, pending)}\n\nLATEST utterance: {text}")
+            f"{_ctx_lines(history or [], last_customer, pending, lang)}\n\nLATEST utterance: {text}")
     body = {
         "model": settings.llm_model,
         "temperature": 0,
@@ -131,11 +161,10 @@ async def extract(text: str, customers, *, history: list[tuple[str, str]] | None
     url = settings.llm_base_url.rstrip("/") + "/chat/completions"
     t0 = time.perf_counter()
     try:
-        async with httpx.AsyncClient(timeout=settings.llm_timeout_s) as client:
-            r = await client.post(url, json=body, headers={"Authorization": f"Bearer {settings.llm_api_key}"})
-            r.raise_for_status()
-            content = r.json()["choices"][0]["message"]["content"]
-            data = json.loads(content)
+        r = await _http().post(url, json=body, headers={"Authorization": f"Bearer {settings.llm_api_key}"})
+        r.raise_for_status()
+        content = r.json()["choices"][0]["message"]["content"]
+        data = json.loads(content)
     except Exception as e:  # network, timeout, bad JSON: the rule parser takes over
         log.warning("llm failed (%.0f ms): %s", (time.perf_counter() - t0) * 1000, e)
         return None
@@ -236,6 +265,7 @@ def to_clauses(text: str, raw: list[dict], customers) -> list[Clause]:
         else:
             c.date = today
         c.txn_time = _hhmm(item.get("time"))
+        c.reply = (item.get("reply") or "").strip()[:400] or None
         c.new_name = (item.get("new_name") or "").strip() or None
         c.name_hi = (item.get("name_hi") or "").strip() or None
         phone = "".join(ch for ch in str(item.get("phone") or "") if ch.isdigit())
@@ -260,6 +290,8 @@ def to_clauses(text: str, raw: list[dict], customers) -> list[Clause]:
             elif per == "today" or c.query.startswith("PERIOD"):
                 c.period, c.period_label = (today, today), "today"
             c.top_n = 5 if c.query == "TOP_DEBTORS" else None
+            if c.query == "LIST_ENTRIES" and not c.period:
+                c.period, c.period_label = (today, today), "today"
         elif intent == "CORRECTION":
             new_amt = _num(item.get("new_amount_rupees")) or amt
             c.new_amount = int(round(new_amt * 100)) if new_amt else None

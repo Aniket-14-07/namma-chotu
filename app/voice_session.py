@@ -45,7 +45,7 @@ KHATA_TERMS = ["Chotu", "udhaar", "udhar", "jama", "khata", "rupaye", "payment",
 WAKE_REQUIRED = os.getenv("HANDSFREE_WAKE", "1") == "1"   # hands-free: only "Chotu, ..." counts
 FOLLOWUP_WINDOW_S = 8.0     # after a reply/question, answers don't need the wake word
 TTS_LANG = {"hi": "hi-IN", "en": "en-IN", "kn": "kn-IN"}
-PTT_FLUSH_TIMEOUT_S = 2.5
+PTT_FLUSH_TIMEOUT_S = 1.8
 BARGE_IN_GRACE_S = 0.45      # ignore speech_start right after TTS starts (speaker echo)
 
 
@@ -59,6 +59,21 @@ def wake_config() -> dict | None:
         return None
     return {"access_key": settings.picovoice_access_key, "keyword_url": f"/wake/{ppn[0].name}",
             "model_url": "/wake/porcupine_params.pv", "label": "Hey Chotu", "sensitivity": settings.wake_sensitivity}
+
+
+def _confident(clauses) -> bool:
+    """Rule parse that is safe to act on without the LLM: every clause a clean entry for one known customer."""
+    if not clauses:
+        return False
+    if all((c.intent == "SET_ALARM" and c.alarm_at) or c.intent == "TIME" or
+           (c.intent == "QUERY" and c.query in ("LIST_CUSTOMERS", "LIST_ENTRIES")) for c in clauses):
+        return True
+    for c in clauses:
+        if c.intent != "TXN" or not c.amount or c.kind is None or not c.kind_explicit or c.confidence < 0.9:
+            return False
+        if c.mention is None or not c.mention.known or len(c.mention.candidates) != 1:
+            return False
+    return True
 
 
 ONE_WORD_OK = {"haan", "han", "ha", "nahi", "nahin", "na", "ok", "okay", "yes", "no", "hmm", "ji", "theek", "sari", "howdu", "illa", "beda"}
@@ -90,6 +105,7 @@ class VoiceSession:
         self._processing_at = 0.0
         self._last_reply_at = 0.0
         self.wake_turn = False
+        self._llm_warned = False
         self.closed = False
 
     # ------------------------------------------------------------------ io
@@ -182,9 +198,11 @@ class VoiceSession:
                     log.warning("commit failed: %s", e)
                 self._flush_task = asyncio.create_task(self._flush_after_release())
         elif typ == "lang":
+            # silent switch: no re-introduction, just recognise and reply in the new language
+            old = self._stt_lang()
             self.dialogue.set_language(d.get("lang") or "auto")
-            if d.get("lang") in ("hi", "kn", "en"):
-                await self.deliver(self.dialogue.greeting(), t_end=None)   # confirms + re-discloses AI
+            if self._stt_lang() != old:
+                await self._restart_stt()
         elif typ == "interrupt":
             await self.barge_in("client")
         elif typ == "text":
@@ -206,13 +224,29 @@ class VoiceSession:
         silence = "1500" if self.mode == "ptt" else settings.min_silence_ms   # PTT ends turns via commit
         self.stt = PrismaStream(
             api_key=settings.gnani_api_key, url=settings.stt_url, model=settings.stt_model,
-            languages=settings.stt_languages, fmt=settings.stt_format, keyterms=self._keyterms(),
+            languages=self._stt_lang(), fmt=settings.stt_format, keyterms=self._keyterms(),
             vad_threshold=settings.vad_threshold, min_silence_ms=silence, on_event=self.on_stt_event)
         if tts and self.tts is None:
             self.tts = TimbreClient(api_key=settings.gnani_api_key, url=settings.tts_url,
                                     model=settings.tts_model, voice=settings.tts_voice,
                                     sample_rate=settings.tts_sample_rate, speed=settings.tts_speed)
         self._ensure_stt()
+
+    def _stt_lang(self) -> str:
+        """A single locale recognises far better than auto-detect: use the shopkeeper's chosen language
+        (Hindi/Kannada recognisers still take English words). Auto -> the configured setting."""
+        return {"hi": "hi-IN", "kn": "kn-IN", "en": "en-IN"}.get(self.dialogue.preferred, settings.stt_languages)
+
+    async def _restart_stt(self) -> None:
+        if not self.live:
+            return
+        if self.stt:
+            try:
+                await self.stt.close()
+            except Exception:
+                pass
+        self.stt = None
+        await self._setup_gnani(tts=False)
 
     def _ensure_stt(self) -> None:
         if self.stt is None or self.stt.is_open:
@@ -372,8 +406,15 @@ class VoiceSession:
         t0 = time.monotonic()
         clauses = None
         if settings.llm_enabled and settings.nlu_mode == "llm":
-            # LLM first (understands free-form speech + context); rule parser if it fails or times out
-            clauses = await llm.extract(text, self.ledger.customers, **self.dialogue.llm_context())
+            parsed = parse(text, self.ledger.customers, today_ist())
+            if self.dialogue.pending is None and _confident(parsed.clauses):
+                clauses = None            # fast path: a plain, unambiguous entry needs no LLM round trip
+            else:
+                # LLM understands free-form speech + context; rule parser if it fails or times out
+                clauses = await llm.extract(text, self.ledger.customers, **self.dialogue.llm_context())
+                if clauses is None and not self._llm_warned:
+                    self._llm_warned = True
+                    await self.send({"type": "notice", "text": "AI understanding is unavailable right now (check LLM_API_KEY); using basic mode."})
         else:
             parsed = parse(text, self.ledger.customers, today_ist())
             if parsed.clauses and all(c.intent == "UNKNOWN" for c in parsed.clauses) and settings.llm_enabled:

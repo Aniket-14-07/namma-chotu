@@ -259,3 +259,66 @@ h2 { font-size: 17px; margin: 22px 4px 8px; }
 .btn.small { padding: 6px 10px; font-size: 13px; }
 .closing { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 14px 0 20px; font-size: 15px; font-weight: 600; }
 .closing input[type=time] { margin-left: auto; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 10px; font-size: 16px; }
+
+
+/* ================= khata notebook look ================= */
+:root { --page: #FFFDF6; --line: #C9DCEB; --margin: #E7A0A6; --hand: "Kalam", "Noto Sans Kannada", cursive; }
+body { background: #2E4A3B; }
+.top {
+  background: var(--leaf); color: #fff; border-bottom: 0;
+  box-shadow: inset 0 -6px 0 rgba(0,0,0,.12);
+}
+.top .tag { color: #CFE5D8; }
+.top .logo { background: #FFF6DC; color: var(--leaf); font-family: var(--hand); }
+.brand h1 { font-family: var(--hand); font-size: 22px; letter-spacing: .01em; }
+.top .badge { background: rgba(255,255,255,.18); color: #fff; }
+.top .badge.live { background: #FFF6DC; color: var(--leaf); }
+.top .langsel { background: rgba(255,255,255,.18); color: #fff; border-color: transparent; }
+.top .langsel option { color: #13261D; }
+.top .latency { color: #FFF6DC; }
+/* ruled paper with a red margin, everywhere you read */
+main {
+  background-color: var(--page);
+  background-image:
+    linear-gradient(90deg, transparent 38px, var(--margin) 38px, var(--margin) 40px, transparent 40px),
+    repeating-linear-gradient(180deg, transparent 0 31px, var(--line) 31px 32px);
+  background-attachment: local;
+  padding-left: 50px;
+}
+.feed { margin-top: 4px; gap: 10px; }
+.feed li { font-size: 16px; line-height: 1.45; }
+.feed .bot { background: rgba(255,255,255,.92); border: 1px solid #E3E8E0; white-space: pre-line; }
+.feed .you { box-shadow: 0 1px 0 rgba(0,0,0,.08); }
+.feed .sys { color: var(--ink-soft); font-size: 13px; }
+/* a saved entry = one handwritten khata line */
+.feed .entry {
+  align-self: stretch; max-width: none; border-radius: 0; padding: 4px 2px; background: transparent;
+  display: grid; grid-template-columns: auto 1fr auto auto; grid-template-rows: auto auto; column-gap: 10px;
+  font-family: var(--hand); border-bottom: 2px dashed rgba(19,38,29,.18);
+  animation: ink .45s ease-out both;
+}
+@keyframes ink { from { opacity: 0; transform: translateX(-8px); } }
+.entry .e-time { grid-row: 1 / span 2; align-self: center; font-size: 14px; color: var(--ink-soft); min-width: 62px; }
+.entry .e-name { font-size: 21px; font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.entry .e-edit { border: 0; background: none; color: var(--ink-soft); font-size: 16px; padding: 0 4px; cursor: pointer; }
+.entry .e-amt { font-size: 24px; font-weight: 700; text-align: right; }
+.entry.gave .e-amt { color: var(--udhaar); }
+.entry.got .e-amt { color: var(--leaf); }
+.entry .e-amt s { font-size: 16px; color: var(--ink-soft); font-weight: 400; margin-right: 4px; }
+.entry .e-bal { grid-column: 2 / span 3; font-size: 15px; color: var(--ink-soft); }
+.entry.removed .e-name, .entry.removed .e-amt { text-decoration: line-through; opacity: .6; }
+.feed .alarm {
+  align-self: stretch; max-width: none; background: #FFF1C9; border: 2px solid #E2A21B; font-weight: 700;
+  display: flex; justify-content: space-between; align-items: center; gap: 10px; animation: ring 0.6s ease-in-out 3;
+}
+.feed .alarm button { border: 0; background: var(--leaf); color: #fff; border-radius: 10px; padding: 6px 12px; font-weight: 700; }
+.feed .alarm.done { opacity: .5; animation: none; }
+@keyframes ring { 50% { transform: rotate(-1.2deg); } }
+.question { background: #FFF6DC; border-color: #E2C36A; }
+/* Hisaab / Khata pages read like the notebook too */
+.outstanding, .stat, .rows { background: rgba(255,255,255,.9); }
+.outstanding .v, .stat .v, .rows .m { font-family: var(--hand); }
+.rows .n { font-family: var(--hand); font-size: 18px; }
+h2 { font-family: var(--hand); }
+.dock { background: #FBF8EE; }
+.mic { box-shadow: 0 6px 18px rgba(14,107,69,.35), inset 0 0 0 4px rgba(255,255,255,.18); }

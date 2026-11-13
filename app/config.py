@@ -46,7 +46,7 @@ class Settings:
     llm_base_url: str = field(default_factory=lambda: os.getenv("LLM_BASE_URL", ""))
     llm_api_key: str = field(default_factory=lambda: os.getenv("LLM_API_KEY", ""))
     llm_model: str = field(default_factory=lambda: os.getenv("LLM_MODEL", ""))
-    llm_timeout_s: float = field(default_factory=lambda: float(os.getenv("LLM_TIMEOUT_S", "3")))
+    llm_timeout_s: float = field(default_factory=lambda: float(os.getenv("LLM_TIMEOUT_S", "4")))
     # "llm" = LLM understands every turn (rule parser is the fallback). "rules" = rules first, LLM only if lost.
     closing_time: str = field(default_factory=lambda: os.getenv("CLOSING_TIME", "21:00"))   # daily summary, IST
     nlu_mode: str = field(default_factory=lambda: os.getenv("NLU_MODE", "llm"))

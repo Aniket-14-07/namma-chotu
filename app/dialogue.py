@@ -91,7 +91,8 @@ class Session:
         last = self._recent_customer()
         return {"history": list(self.history),
                 "last_customer": self._customer(last).name if last and last in self.ledger._customers else None,
-                "pending": " ".join(str(x) for x in self.pending.question if isinstance(x, str)) if self.pending else None}
+                "pending": " ".join(str(x) for x in self.pending.question if isinstance(x, str)) if self.pending else None,
+                "lang": self.preferred if self.preferred != "auto" else None}
 
     # ------------------------------------------------------------------ public
     def set_language(self, lang: str) -> None:
@@ -239,6 +240,13 @@ class Session:
             return self._step_closing_time(item, turn)
         if c.intent == "RENAME_CUSTOMER":
             return self._step_rename(item, queue, turn)
+        if c.intent in ("CHAT", "GREETING", "UNKNOWN") and getattr(c, "reply", None):
+            turn.parts.append(c.reply)
+            return False
+        if c.intent == "TIME":
+            from .timeutil import now_ist
+            turn.parts += R.now_time(now_ist(), lang)
+            return False
         if c.intent == "FUTURE":
             name = R.name_for(self._customer(c.mention.candidates[0]), lang) if c.mention and c.mention.known \
                 else R.t("someone", lang)
@@ -381,8 +389,13 @@ class Session:
         if c.alarm_at is None:
             turn.parts += R.simple("alarm_need_time", lang)
             return False
+        from datetime import timedelta as _td
         from .timeutil import now_ist
-        if c.alarm_at <= now_ist():
+        now = now_ist()
+        if c.alarm_at <= now and c.alarm_at.hour < 12 and c.alarm_at.date() == now.date() \
+                and c.alarm_at + _td(hours=12) > now:
+            c.alarm_at = c.alarm_at + _td(hours=12)          # "8 baje" said at 7 pm means 8 pm
+        if c.alarm_at <= now:
             turn.parts += R.simple("alarm_past", lang)
             return False
         cid = None
@@ -454,8 +467,9 @@ class Session:
         if other and other.id != cid:
             turn.parts += R.simple("customer_exists", lang, name=R.name_for(other, lang))
             return False
+        old_name = self._customer(cid).name
         cust = self.ledger.update_customer(cid, name=c.new_name, name_hi=c.name_hi, session_id=self.id)
-        turn.events.append({"type": "customer_updated", "customer": {"id": cust.id, "name": cust.name}})
+        turn.events.append({"type": "customer_updated", "old": old_name, "customer": {"id": cust.id, "name": cust.name}})
         self._touch_customer(cid, turn)
         turn.parts += R.simple("customer_renamed", lang, name=R.name_for(cust, lang))
         return False
@@ -482,9 +496,35 @@ class Session:
                 kind = {"LAST_PAYMENT": "PAYMENT", "LAST_CREDIT": "CREDIT"}.get(q)
                 turn.parts += R.last_txn(cust, L.last_txn(cid, kind), kind, lang)
             return False
+        if q == "CUSTOMER_HISTORY":
+            cid = self._resolve_customer(item, c.mention, queue, turn, allow_context=True, allow_new=False)
+            if cid is True:
+                return True
+            if cid is None:
+                q = "LIST_CUSTOMERS"
+            else:
+                self._touch_customer(cid, turn)
+                rows = [e for e in L.customer_txns(cid, 8) if e["status"] == "active"]
+                turn.parts += R.customer_history(self._customer(cid), rows, L.balance(cid), lang)
+                return False
+        if q == "LIST_CUSTOMERS":
+            bals = L.balances()
+            rows = sorted(((self._customer(cid), b) for cid, b in bals.items() if cid in L._customers),
+                          key=lambda x: (-abs(x[1]), x[0].name))
+            turn.parts += R.list_customers(rows, lang)
+            return False
         t = today_ist()
         start, end = c.period or (t, t)
         label = c.period_label or "today"
+        if q == "LIST_ENTRIES":
+            entries = []
+            d = start
+            from datetime import timedelta as _td
+            while d <= end and len(entries) < 60:
+                entries += L.day_txns(d)
+                d += _td(days=1)
+            turn.parts += R.list_entries(label, start, entries, lang)
+            return False
         if q == "PERIOD_CREDIT":
             total, n = L.sum_kind("CREDIT", start, end)
             turn.parts += R.period_sum("CREDIT", label, start, total, n, lang)
@@ -622,8 +662,13 @@ class Session:
 
         def drop() -> bool:
             self.pending = None
-            turn.parts += R.simple("kept_pending_dropped", lang)
+            # a new topic simply replaces the open question; no robotic "dropped" notice
             return False
+
+        def reask() -> bool:
+            p.at = time.monotonic()
+            turn.parts += p.question
+            return True
 
         if p.kind == "which_customer":
             chosen = None
@@ -700,6 +745,8 @@ class Session:
                 return resume()
             if is_no:
                 return cancel()
+            if is_yes:
+                return reask()
             return drop()
 
         if p.kind == "need_amount":
@@ -710,6 +757,8 @@ class Session:
                 return resume()
             if is_no:
                 return cancel()
+            if is_yes:
+                return reask()
             return drop()
 
         if p.kind == "need_customer":
@@ -720,6 +769,8 @@ class Session:
                     return resume()
             if is_no:
                 return cancel()
+            if is_yes:
+                return reask()
             return drop()
 
         self.pending = None

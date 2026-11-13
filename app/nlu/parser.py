@@ -47,6 +47,7 @@ class Clause:
     alarm_at: object | None = None        # datetime (IST) for SET_ALARM
     alarm_text: str | None = None
     closing_time: str | None = None
+    reply: str | None = None              # CHAT: what the LLM wants Chotu to say
     # customer management (LLM path): add / rename
     new_name: str | None = None
     name_hi: str | None = None
@@ -401,7 +402,9 @@ def _parse_segment(tokens, a, b, spans, mentions, today, all_spans=None) -> Clau
         return c
 
     # --- reminder for the shopkeeper himself: "mujhe 7 baje yaad dilana ..." -------------
-    if kset & L.REMINDER and (kset & (L.FIRST_PERSON | L.FIRST_PERSON_EN)):
+    has_clock = bool(spoken_time(tokens[a:b], [type(x)(x.start - a, x.end - a, x.paise, x.flags)
+                                               for x in (all_spans or spans) if a <= x.start < b])[0])
+    if kset & L.REMINDER and (kset & (L.FIRST_PERSON | L.FIRST_PERSON_EN) or has_clock):
         seg_all = [x for x in (all_spans or spans) if a <= x.start < b]
         tm, _ = spoken_time(tokens[a:b], [type(x)(x.start - a, x.end - a, x.paise, x.flags) for x in seg_all])
         c.intent = "SET_ALARM"
@@ -414,8 +417,9 @@ def _parse_segment(tokens, a, b, spans, mentions, today, all_spans=None) -> Clau
             hh, mm = (int(x) for x in tm.split(":"))
             c.alarm_at = datetime.combine(day, dtime(hh, mm), tzinfo=IST)
         drop = L.FIRST_PERSON | L.FIRST_PERSON_EN | L.REMINDER | L.BAJE | L.MORNING | L.NOON | L.EVENING | L.NIGHT \
-            | {pkey(x) for x in ("kal", "aaj", "tomorrow", "today", "naale", "ki", "ke", "ko", "dilana", "dilaana", "dila", "do", "dena", "karna", "please")}
-        words = [t for t in toks if pkey(t) not in drop and not t.isdigit()]
+            | {pkey(x) for x in ("kal", "aaj", "tomorrow", "today", "naale", "ki", "ke", "ko", "dilana", "dilaana", "dila", "do",
+                                 "dena", "karna", "please", "kar", "minute", "min", "pe", "par", "saade", "sade", "sawa", "baj", "ko")}
+        words = [t for t in toks if pkey(t) not in drop and not t.replace(".", "").replace(":", "").isdigit()]
         c.alarm_text = " ".join(words).strip() or " ".join(toks)
         c.mention = seg_mentions[0] if seg_mentions else None
         return c
@@ -469,6 +473,24 @@ def _parse_segment(tokens, a, b, spans, mentions, today, all_spans=None) -> Clau
         d, dexp, _ = _txn_date(tokens[a:b], [], today)
         c.date, c.date_explicit = d or today, dexp
         c.confidence = 0.9
+        return c
+
+    # --- "abhi kitna baja hai" ---------------------------------------------------------
+    if kset & L.TIME_Q and (kset & L.QUERY) and not seg_spans and not seg_mentions:
+        c.intent = "TIME"
+        return c
+
+    # --- lists: "sabka hisaab / list do / aaj ki entries" --------------------------------
+    if kset & L.LIST_W and not seg_spans:
+        period, plabel = _period(tokens[a:b], today)
+        c.intent = "QUERY"
+        if seg_mentions:
+            c.query, c.mention = "CUSTOMER_HISTORY", seg_mentions[0]
+        elif kset & {pkey("entries"), pkey("entry")} or period:
+            c.query = "LIST_ENTRIES"
+            c.period, c.period_label = (period, plabel) if period else ((today, today), "today")
+        else:
+            c.query = "LIST_CUSTOMERS"
         return c
 
     # --- queries ----------------------------------------------------------------------
@@ -536,23 +558,44 @@ def _parse_segment(tokens, a, b, spans, mentions, today, all_spans=None) -> Clau
 
 
 def spoken_time(tokens: list[str], spans) -> tuple[str | None, set[int]]:
-    """'shaam 5 baje' -> ('17:00', {index of the 5-span}). Bare 1-7 o'clock in a shop means PM."""
+    """'shaam 5 baje' -> ('17:00', {ids of the spans used}). Also '7:30 baje', '7.30 baje', 'saade 7 baje',
+    '7 baj kar 30 minute'. Bare 1-7 o'clock in a shop means PM."""
     keys = [pkey(t) for t in tokens]
     for s in spans:
-        if s.end < len(tokens) and keys[s.end] in L.BAJE:
+        if not (s.end < len(tokens) and keys[s.end] in L.BAJE):
+            continue
+        used = {id(s)}
+        span_toks = tokens[s.start:s.end]
+        m = 0
+        if len(span_toks) == 2 and all(t.isdigit() for t in span_toks) and int(span_toks[1]) < 60:
+            h, m = int(span_toks[0]), int(span_toks[1])            # "7:30" tokenised as 7, 30
+        elif "." in span_toks[0] and span_toks[0].replace(".", "").isdigit():
+            a, b = span_toks[0].split(".", 1)
+            h, m = int(a), int(b[:2].ljust(2, "0")) if int(b[:2].ljust(2, "0")) < 60 else 0
+        else:
             h = int(s.paise // 100)
-            frac = s.paise % 100
-            if not 0 < h <= 24:
-                continue
-            m = 30 if frac == 50 else 0
-            before = set(keys[max(0, s.start - 2):s.start])
-            if before & L.MORNING:
-                h = h % 12
-            elif before & (L.EVENING | L.NIGHT | L.NOON) or keys[s.end] == pkey("pm"):
-                h = h % 12 + 12 if h < 12 else h
-            elif h <= 7:
-                h += 12
-            return f"{h % 24:02d}:{m:02d}", {id(s)}
+            if s.paise % 100 == 50:
+                m = 30
+        before = set(keys[max(0, s.start - 2):s.start]) | set(keys[s.start:s.end])
+        if before & {pkey("saade"), pkey("sade"), pkey("saadhe")}:
+            m = 30
+        if before & {pkey("sawa"), pkey("sava")}:
+            m = 15
+        # "7 baj kar 30 minute"
+        for s2 in spans:
+            if s2.start > s.end and s2.start <= s.end + 3 and s2.end < len(tokens) and keys[s2.end] in {pkey("minute"), pkey("min"), pkey("mint")}:
+                m = int(s2.paise // 100) % 60
+                used.add(id(s2))
+                break
+        if not 0 < h <= 24:
+            continue
+        if before & L.MORNING:
+            h = h % 12
+        elif before & (L.EVENING | L.NIGHT | L.NOON) or keys[s.end] == pkey("pm"):
+            h = h % 12 + 12 if h < 12 else h
+        elif h <= 7:
+            h += 12
+        return f"{h % 24:02d}:{m:02d}", used
     return None, set()
 
 

@@ -80,7 +80,7 @@ function setLang(lang, fromUser) {
   $("#langSel").value = lang;
   try { localStorage.setItem("nc_lang", lang); } catch (_) {}
   applyI18n();
-  if (fromUser && S.started) send({ type: "lang", lang });
+  if (fromUser && S.started) { send({ type: "lang", lang }); toast($("#langSel").selectedOptions[0].textContent); }
   if (S.started) refreshAll();
 }
 
@@ -139,6 +139,9 @@ function onJson(m) {
       refreshSoon();
       break;
     case "stt_closed":
+      break;
+    case "notice":
+      addFeed(m.text, "sys");
       break;
     case "ignored":
       addFeed(`"${m.text}" (${tr("ignored")})`, "sys");
@@ -428,7 +431,7 @@ function onReply(m) {
     if (e.type === "alarm" || e.type === "closing") notify(m.display);
     if (e.type === "alarm_set" || e.type === "settings") refreshSoon();
     if (e.type === "customer_created") addEditChip(e.customer, tr("new_acct"));
-    if (e.type === "customer_updated") { const n = $("#ledgerLine .who-name"); if (S.lineCust === e.customer.id) n.textContent = e.customer.name; }
+    if (e.type === "customer_updated") document.querySelectorAll(".entry .e-name").forEach((n) => { if (n.textContent === e.old) n.textContent = e.customer.name; });
   }
   if (m.events.some((e) => e.type.startsWith("customer_"))) refreshSoon();
   const rem = m.events.find((e) => e.type === "reminder");
@@ -437,28 +440,25 @@ function onReply(m) {
   if (!S.live) setMic("", restingHint());
 }
 
+// every saved entry becomes one ruled line in the khata (chat), like a line written in the notebook
 async function showEntry(t, voided, removed) {
-  const box = $("#ledgerLine");
-  box.classList.remove("empty", "payment", "fresh");
-  void box.offsetWidth;
-  box.classList.add("fresh");
-  if (t.kind === "PAYMENT") box.classList.add("payment");
-  box.querySelector(".who-name").textContent = t.customer;
   S.lineCust = t.customer_id;
-  $("#lineEdit").hidden = false;
-  const amt = box.querySelector(".amt");
-  amt.textContent = `${inr(t.amount_paise)} ${t.kind === "PAYMENT" ? tr("payment") : tr("credit")}`;
-  if (removed) amt.innerHTML = `<span class="was">${inr(t.amount_paise)}</span> ${esc(tr("removed"))}`;
-  else if (voided && voided.txn.amount_paise !== t.amount_paise) {
-    const w = document.createElement("span");
-    w.className = "was";
-    w.textContent = inr(voided.txn.amount_paise);
-    amt.appendChild(w);
-  }
-  box.querySelector(".meta").textContent = whenText(t);
+  const li = document.createElement("li");
+  li.className = `entry ${t.kind === "PAYMENT" ? "got" : "gave"}${removed ? " removed" : ""}`;
+  const sign = t.kind === "PAYMENT" ? "−" : "+";
+  const was = voided && voided.txn.amount_paise !== t.amount_paise ? `<s>${inr(voided.txn.amount_paise)}</s> ` : "";
+  li.innerHTML = `<span class="e-time">${esc(t.txn_time ? fmtTime(t.txn_time) : dayLabel(t.txn_date))}</span>
+    <span class="e-name"></span><button class="e-edit" type="button" aria-label="Edit name">✎</button>
+    <span class="e-amt">${was}${sign}${inr(t.amount_paise)}</span>
+    <span class="e-bal"></span>`;
+  li.querySelector(".e-name").textContent = t.customer;
+  li.querySelector(".e-edit").onclick = () => openEdit(t.customer_id);
+  const feed = $("#feed");
+  feed.append(li);
+  scrollChat();
   try {
     const c = await (await fetch(`/api/customers/${t.customer_id}`)).json();
-    box.querySelector(".meta").textContent = `${whenText(t)} · ${balText(c.balance)}`;
+    li.querySelector(".e-bal").textContent = removed ? tr("removed") : balText(c.balance);
   } catch (_) {}
 }
 
@@ -493,8 +493,23 @@ function addEditChip(cust, label) {
   b.onclick = () => openEdit(cust.id);
   li.appendChild(b);
 }
+function chime() {
+  if (!S.ctx) return;
+  [660, 880, 990].forEach((f, i) => {
+    const o = S.ctx.createOscillator(), g = S.ctx.createGain();
+    o.frequency.value = f; g.gain.value = 0.09;
+    o.connect(g).connect(S.ctx.destination);
+    const t0 = S.ctx.currentTime + i * 0.18;
+    o.start(t0); o.stop(t0 + 0.15);
+  });
+}
 function notify(text) {
-  toast(text);
+  chime();
+  const li = addFeed(text, "alarm");
+  const b = document.createElement("button");
+  b.type = "button"; b.textContent = "✓";
+  b.onclick = () => li.classList.add("done");
+  li.appendChild(b);
   if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
   try {
     if ("Notification" in window && Notification.permission === "granted" && document.hidden)
@@ -646,7 +661,7 @@ async function openEdit(id, c) {
   $("#fName").focus();
   $("#fCancel").onclick = () => openCustomer(id);
   $("#custForm").onsubmit = (e) => { e.preventDefault(); saveCustomer(`/api/customers/${id}`, "PATCH", (d) => {
-    if (S.lineCust === id) $("#ledgerLine .who-name").textContent = d.name;
+    refreshSoon();
     openCustomer(id);
   }); };
 }
@@ -692,7 +707,7 @@ function wire() {
     body: JSON.stringify({ closing_time: $("#closingTime").value, closing_on: $("#closingOn").checked }) }).then(() => toast(tr("saved")));
   $("#closingTime").onchange = saveClosing;
   $("#closingOn").onchange = saveClosing;
-  $("#lineEdit").onclick = () => S.lineCust && openEdit(S.lineCust);
+
   $("#custSheet .sheet-x").onclick = () => sheet.close();
   $("#custSheet").onclick = (e) => { if (e.target.id === "custSheet") sheet.close(); };
   $("#typeForm").onsubmit = (e) => { e.preventDefault(); submitText($("#typeInput").value); $("#typeInput").value = ""; };

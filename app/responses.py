@@ -32,7 +32,13 @@ class Day:
     d: date
 
 
-Part = str | Amt | Day
+@dataclass
+class Shown:
+    """Text shown on screen but not spoken (long lists: speak the gist, show everything)."""
+    text: str
+
+
+Part = str | Amt | Day | Shown
 
 # --------------------------------------------------------------------------- phrasebook
 T: dict[str, dict[str, str]] = {
@@ -150,6 +156,14 @@ T: dict[str, dict[str, str]] = {
     "market_both": {"hi": " कुल बाज़ार से {a} लेना है", "kn": " ಒಟ್ಟು ಮಾರ್ಕೆಟ್‌ನಿಂದ {a} ಬರಬೇಕು", "en": " In total you'll get {a}"},
     "market_owe": {"hi": ", और आपको {b} देना है", "kn": ", ನೀವು {b} ಕೊಡಬೇಕು", "en": ", and you owe {b}"},
     "last_entry_at": {"hi": "आख़िरी एंट्री {tm}।", "kn": "ಕೊನೆಯ ಎಂಟ್ರಿ {tm}.", "en": "Last entry at {tm}."},
+    "now_time": {"hi": "अभी {tm} हुए हैं, {d}।", "kn": "ಈಗ {tm}, {d}.", "en": "It's {tm}, {d}."},
+    "list_customers": {"hi": "आपके {n} ग्राहक हैं। {m} से लेना है, {k} को देना है।", "kn": "ನಿಮಗೆ {n} ಗ್ರಾಹಕರು. {m} ಜನರಿಂದ ಬರಬೇಕು, {k} ಜನರಿಗೆ ಕೊಡಬೇಕು.",
+                       "en": "You have {n} customers: {m} owe you, you owe {k}."},
+    "list_entries": {"hi": "{p} {n} एंट्री हुईं।", "kn": "{p} {n} ಎಂಟ್ರಿಗಳು.", "en": "{p}: {n} entries."},
+    "history_head": {"hi": "{name} की आख़िरी {n} एंट्री।", "kn": "{name} ಅವರ ಕೊನೆಯ {n} ಎಂಟ್ರಿಗಳು.", "en": "{name}'s last {n} entries."},
+    "get_word": {"hi": "लेना", "kn": "ಬರಬೇಕು", "en": "owes you"},
+    "give_word": {"hi": "देना", "kn": "ಕೊಡಬೇಕು", "en": "you owe"},
+    "settled_word": {"hi": "बराबर", "kn": "ಸರಿಸಮ", "en": "settled"},
     "period_none_all": {"hi": "{p} कोई एंट्री नहीं हुई।", "kn": "{p} ಯಾವುದೇ ಎಂಟ್ರಿ ಇಲ್ಲ.", "en": "{p}: no entries."},
     "owe_total": {"hi": " आपको {m} लोगों को {b} देना है।", "kn": " ನೀವು {m} ಜನರಿಗೆ {b} ಕೊಡಬೇಕು.", "en": " You owe {b} to {m} people."},
     "top_none": {"hi": "किसी पर उधार बाकी नहीं है।", "kn": "ಯಾರ ಮೇಲೂ ಉದ್ರಿ ಬಾಕಿ ಇಲ್ಲ.", "en": "Nobody owes anything."},
@@ -200,6 +214,9 @@ def render(parts: list[Part], lang: str) -> tuple[str, str]:
     """-> (display_text, speak_text)"""
     disp, speak = [], []
     for p in parts:
+        if isinstance(p, Shown):
+            disp.append(p.text)
+            continue
         if isinstance(p, Amt):
             disp.append(fmt_inr(p.paise))
             speak.append(_speak_amount(p.paise, lang))
@@ -429,3 +446,44 @@ def reminder_message(cust, bal: int, shop: str = "Namma Chotu Kirana") -> str:
     return (f"नमस्ते {hi_name} जी, आपके खाते में {fmt_inr(bal)} बाकी है। जब सुविधा हो, दे दीजिएगा। "
             f"धन्यवाद! — {shop}\n(Hello {cust.name} ji, {fmt_inr(bal)} is pending in your account. "
             f"Please pay whenever convenient. Thank you!)")
+
+
+def _bal_line(b: int, lang: str) -> str:
+    if b > 0:
+        return f"{fmt_inr(b)} {t('get_word', lang)}"
+    if b < 0:
+        return f"{fmt_inr(-b)} {t('give_word', lang)}"
+    return t("settled_word", lang)
+
+
+def list_customers(rows: list, lang: str) -> list[Part]:
+    """rows: [(customer, balance)] sorted. Speak the counts, show every line."""
+    get = sum(1 for _, b in rows if b > 0)
+    give = sum(1 for _, b in rows if b < 0)
+    parts = fill("list_customers", lang, n=len(rows), m=get, k=give)
+    lines = [f"\n• {name_for(c, lang)}: {_bal_line(b, lang)}" for c, b in rows[:25]]
+    return parts + [Shown("".join(lines))]
+
+
+def list_entries(label, start, entries: list, lang: str) -> list[Part]:
+    parts = fill("list_entries", lang, p=period_word(label, start, lang), n=len(entries))
+    lines = []
+    for e in entries[:30]:
+        sign = "−" if e["kind"] == "PAYMENT" else "+"
+        when = time_word(e.get("txn_time"), lang) if e.get("txn_time") else e["txn_date"][5:]
+        lines.append(f"\n• {when}  {e['customer']}  {sign}{fmt_inr(e['amount_paise'])}")
+    return parts + [Shown("".join(lines))]
+
+
+def customer_history(cust, entries: list, bal: int, lang: str) -> list[Part]:
+    parts = fill("history_head", lang, name=name_for(cust, lang), n=len(entries))
+    lines = []
+    for e in entries:
+        sign = "−" if e["kind"] == "PAYMENT" else "+"
+        tm = (" " + time_word(e["txn_time"], lang)) if e.get("txn_time") else ""
+        lines.append(f"\n• {e['txn_date'][8:]}/{e['txn_date'][5:7]}{tm}  {sign}{fmt_inr(e['amount_paise'])}")
+    return parts + [Shown("".join(lines) + "\n")] + balance(cust, bal, lang)
+
+
+def now_time(now, lang: str) -> list[Part]:
+    return fill("now_time", lang, tm=time_word(now.strftime("%H:%M"), lang), d=Day(now.date()))
