@@ -13,6 +13,21 @@
 - **Languages:** Hindi, Kannada and English, mixed freely in one sentence ("Ramesh ka munnooru nalavattu udhaar"). Replies come in the shopkeeper's language and script. Other Indic languages go to the optional LLM fallback.
 - **Device:** any browser, including low-end Android Chrome. Plain HTML/JS with no build step; push-to-talk or hands-free.
 
+## For judges: try it in 2 minutes
+
+- **Live app:** [your-app.onrender.com link]. Open it in **Chrome** (phone or laptop) and allow the microphone. The first open can take about 50 s while the free server wakes up.
+- Pick a language, then either **hold the mic**, say **"Hey Chotu"** and wait for the beep, or tap **बात करो** for a hands-free voice conversation.
+- Try saying:
+  - "Suresh ne 500 ki shopping kari"
+  - "इसको 200 और देना है"
+  - "Ramesh 300 credit" (Chotu asks: दिया या मिला?)
+  - "Nahi, 250" (corrects the last entry)
+  - "सबका हिसाब बताओ"
+  - "7:45 बजे याद दिलाना चाय"
+  - "आज का हिसाब"
+- The customers are synthetic demo data. The **Hisaab** tab shows today, yesterday, reminders and totals; **Khata** has every customer.
+- Demo video: [link] · Idea deck: [link]
+
 ## Architecture
 
 ```mermaid
