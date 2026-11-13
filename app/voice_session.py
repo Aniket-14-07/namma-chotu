@@ -180,7 +180,8 @@ class VoiceSession:
                     self.stt = None
                     await self._setup_gnani(tts=False)
         elif typ == "ptt_down":
-            await self.barge_in("ptt")
+            if not d.get("followup"):
+                await self.barge_in("ptt")      # a follow-up listen must never cut Chotu's own reply
             self.pressing = True
             self.wake_turn = bool(d.get("wake"))
             self.utt_parts, self.utt_ids, self.utt_lang = [], [], None
@@ -414,7 +415,9 @@ class VoiceSession:
                 clauses = await llm.extract(text, self.ledger.customers, **self.dialogue.llm_context())
                 if clauses is None and not self._llm_warned:
                     self._llm_warned = True
-                    await self.send({"type": "notice", "text": "AI understanding is unavailable right now (check LLM_API_KEY); using basic mode."})
+                    await self.send({"type": "notice", "text": f"AI understanding failed ({llm.last_error or 'unknown error'}); using basic mode."})
+                elif clauses is not None:
+                    self._llm_warned = False
         else:
             parsed = parse(text, self.ledger.customers, today_ist())
             if parsed.clauses and all(c.intent == "UNKNOWN" for c in parsed.clauses) and settings.llm_enabled:

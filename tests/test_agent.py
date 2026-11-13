@@ -45,3 +45,18 @@ def test_yes_to_open_question_reasks(session):
     assert r.pending and r.pending["kind"] == "need_amount"
     say(session, "300")
     assert bal(session.ledger, "Suresh Yadav") == 300
+
+
+def test_settle_all_then_remove(session):
+    say(session, "Suresh ka 500 udhaar")
+    r = run(session, "Suresh has cleared all the dues, remove his name",
+            [{"intent": "TXN", "customer": "Suresh Yadav", "heard_name": "Suresh", "kind": "PAYMENT", "settle_all": True},
+             {"intent": "REMOVE_CUSTOMER", "customer": "Suresh Yadav", "heard_name": "Suresh"}])
+    assert any(e["type"] == "customer_removed" for e in r.events)
+    assert "Suresh Yadav" not in {c.name for c in session.ledger.customers}
+
+
+def test_remove_refused_when_due(session):
+    say(session, "Suresh ka 500 udhaar")
+    r = run(session, "Suresh ko hata do", [{"intent": "REMOVE_CUSTOMER", "customer": "Suresh Yadav", "heard_name": "Suresh"}])
+    assert not any(e["type"] == "customer_removed" for e in r.events) and "500" in r.display

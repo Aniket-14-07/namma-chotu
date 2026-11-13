@@ -26,7 +26,7 @@ const S = {
 
 /* ---------------------------------------------------------------- language */
 const I18N = {
-  hi: { get_lbl: "लेना है", give_lbl: "देना है", settled: "हिसाब बराबर", d_owe: "आपको देना है", d_yday: "कल की एंट्री", d_alarms: "याद-दिहानी", d_closing: "रोज़ हिसाब सुनाने का समय", alarm_title: "याद-दिहानी", cancel_alarm: "हटाएँ", add: "जोड़ें", add_title: "नया ग्राहक", name: "नाम", phone: "फ़ोन (ज़रूरी नहीं)", save: "सेव करें", cancel: "रद्द", edit: "नाम/फ़ोन बदलें", edit_title: "ग्राहक बदलें", remove: "ग्राहक हटाएँ", remove_q: "इस ग्राहक को सूची से हटाएँ? पुराना हिसाब ऑडिट में रहेगा।", saved: "सेव हो गया", new_acct: "नया खाता", fix_name: "नाम ठीक करें", renamed: "नाम बदला", balance: "बाकी", tag: "आपकी दुकान, आपकी आवाज़", first_entry: "आज की पहली एंट्री बोलिए", example: "“रमेश का 340 उधार”",
+  hi: { convo: "बात करो", get_lbl: "लेना है", give_lbl: "देना है", settled: "हिसाब बराबर", d_owe: "आपको देना है", d_yday: "कल की एंट्री", d_alarms: "याद-दिहानी", d_closing: "रोज़ हिसाब सुनाने का समय", alarm_title: "याद-दिहानी", cancel_alarm: "हटाएँ", add: "जोड़ें", add_title: "नया ग्राहक", name: "नाम", phone: "फ़ोन (ज़रूरी नहीं)", save: "सेव करें", cancel: "रद्द", edit: "नाम/फ़ोन बदलें", edit_title: "ग्राहक बदलें", remove: "ग्राहक हटाएँ", remove_q: "इस ग्राहक को सूची से हटाएँ? पुराना हिसाब ऑडिट में रहेगा।", saved: "सेव हो गया", new_acct: "नया खाता", fix_name: "नाम ठीक करें", renamed: "नाम बदला", balance: "बाकी", tag: "आपकी दुकान, आपकी आवाज़", first_entry: "आज की पहली एंट्री बोलिए", example: "“रमेश का 340 उधार”",
     rem_title: "विनम्र याद-संदेश तैयार", rem_send: "WhatsApp पर भेजें", close: "बंद करें", d_credit: "आज उधार दिया",
     d_paid: "आज जमा मिला", d_out: "बाज़ार से लेना है", d_top: "सबसे ज़्यादा बाकी", d_today: "आज की एंट्री", search: "ग्राहक खोजें",
     type: "लिखें", hold: "दबाकर बोलिए", send: "भेजें", tab_bolo: "बोलो", tab_hisaab: "हिसाब", tab_khata: "खाता",
@@ -39,7 +39,7 @@ const I18N = {
     last_entry: "आख़िरी एंट्री", no_entry: "कोई एंट्री नहीं", adv_short: "एडवांस",
     optin: "ग्राहक ने याद-संदेश के लिए हाँ कहा है", src_seed: "पुरानी एंट्री", src_voice: "आवाज़ से", src_fix: "सुधार", src_ui: "हाथ से",
     mic_err: "माइक नहीं मिला। फ़ोन पर HTTPS लिंक खोलें और माइक की अनुमति दें।", ignored: "छोटू के लिए नहीं था, छोड़ दिया" },
-  kn: { get_lbl: "ಬರಬೇಕು", give_lbl: "ಕೊಡಬೇಕು", settled: "ಲೆಕ್ಕ ಸರಿಸಮ", d_owe: "ನೀವು ಕೊಡಬೇಕು", d_yday: "ನಿನ್ನೆಯ ಎಂಟ್ರಿಗಳು", d_alarms: "ನೆನಪಿನ ಸೂಚನೆಗಳು", d_closing: "ದಿನದ ಲೆಕ್ಕ ಹೇಳುವ ಸಮಯ", alarm_title: "ನೆನಪು", cancel_alarm: "ತೆಗೆಯಿರಿ", add: "ಸೇರಿಸಿ", add_title: "ಹೊಸ ಗ್ರಾಹಕರು", name: "ಹೆಸರು", phone: "ಫೋನ್ (ಐಚ್ಛಿಕ)", save: "ಉಳಿಸಿ", cancel: "ರದ್ದು", edit: "ಹೆಸರು/ಫೋನ್ ಬದಲಿಸಿ", edit_title: "ಗ್ರಾಹಕರ ವಿವರ ಬದಲಿಸಿ", remove: "ಗ್ರಾಹಕರನ್ನು ತೆಗೆಯಿರಿ", remove_q: "ಈ ಗ್ರಾಹಕರನ್ನು ಪಟ್ಟಿಯಿಂದ ತೆಗೆಯಲೇ? ಹಳೆಯ ಲೆಕ್ಕ ಆಡಿಟ್‌ನಲ್ಲಿ ಇರುತ್ತದೆ.", saved: "ಉಳಿಸಲಾಗಿದೆ", new_acct: "ಹೊಸ ಖಾತೆ", fix_name: "ಹೆಸರು ಸರಿಪಡಿಸಿ", renamed: "ಹೆಸರು ಬದಲಾಯಿತು", balance: "ಬಾಕಿ", tag: "ನಿಮ್ಮ ಅಂಗಡಿ, ನಿಮ್ಮ ಧ್ವನಿ", first_entry: "ಇವತ್ತಿನ ಮೊದಲ ಎಂಟ್ರಿ ಹೇಳಿ", example: "“ರಮೇಶ್ 340 ಉದ್ರಿ”",
+  kn: { convo: "ಮಾತಾಡಿ", get_lbl: "ಬರಬೇಕು", give_lbl: "ಕೊಡಬೇಕು", settled: "ಲೆಕ್ಕ ಸರಿಸಮ", d_owe: "ನೀವು ಕೊಡಬೇಕು", d_yday: "ನಿನ್ನೆಯ ಎಂಟ್ರಿಗಳು", d_alarms: "ನೆನಪಿನ ಸೂಚನೆಗಳು", d_closing: "ದಿನದ ಲೆಕ್ಕ ಹೇಳುವ ಸಮಯ", alarm_title: "ನೆನಪು", cancel_alarm: "ತೆಗೆಯಿರಿ", add: "ಸೇರಿಸಿ", add_title: "ಹೊಸ ಗ್ರಾಹಕರು", name: "ಹೆಸರು", phone: "ಫೋನ್ (ಐಚ್ಛಿಕ)", save: "ಉಳಿಸಿ", cancel: "ರದ್ದು", edit: "ಹೆಸರು/ಫೋನ್ ಬದಲಿಸಿ", edit_title: "ಗ್ರಾಹಕರ ವಿವರ ಬದಲಿಸಿ", remove: "ಗ್ರಾಹಕರನ್ನು ತೆಗೆಯಿರಿ", remove_q: "ಈ ಗ್ರಾಹಕರನ್ನು ಪಟ್ಟಿಯಿಂದ ತೆಗೆಯಲೇ? ಹಳೆಯ ಲೆಕ್ಕ ಆಡಿಟ್‌ನಲ್ಲಿ ಇರುತ್ತದೆ.", saved: "ಉಳಿಸಲಾಗಿದೆ", new_acct: "ಹೊಸ ಖಾತೆ", fix_name: "ಹೆಸರು ಸರಿಪಡಿಸಿ", renamed: "ಹೆಸರು ಬದಲಾಯಿತು", balance: "ಬಾಕಿ", tag: "ನಿಮ್ಮ ಅಂಗಡಿ, ನಿಮ್ಮ ಧ್ವನಿ", first_entry: "ಇವತ್ತಿನ ಮೊದಲ ಎಂಟ್ರಿ ಹೇಳಿ", example: "“ರಮೇಶ್ 340 ಉದ್ರಿ”",
     rem_title: "ವಿನಯದ ನೆನಪಿನ ಸಂದೇಶ ಸಿದ್ಧ", rem_send: "WhatsApp ನಲ್ಲಿ ಕಳಿಸಿ", close: "ಮುಚ್ಚಿ", d_credit: "ಇವತ್ತು ಉದ್ರಿ",
     d_paid: "ಇವತ್ತು ಜಮಾ", d_out: "ಮಾರ್ಕೆಟ್‌ನಿಂದ ಬರಬೇಕು", d_top: "ಅತಿ ಹೆಚ್ಚು ಬಾಕಿ", d_today: "ಇವತ್ತಿನ ಎಂಟ್ರಿಗಳು", search: "ಗ್ರಾಹಕರನ್ನು ಹುಡುಕಿ",
     type: "ಟೈಪ್", hold: "ಒತ್ತಿ ಹಿಡಿದು ಮಾತಾಡಿ", send: "ಕಳಿಸಿ", tab_bolo: "ಮಾತಾಡಿ", tab_hisaab: "ಲೆಕ್ಕ", tab_khata: "ಖಾತೆ",
@@ -52,7 +52,7 @@ const I18N = {
     last_entry: "ಕೊನೆಯ ಎಂಟ್ರಿ", no_entry: "ಎಂಟ್ರಿ ಇಲ್ಲ", adv_short: "ಮುಂಗಡ",
     optin: "ಗ್ರಾಹಕರು ನೆನಪಿನ ಸಂದೇಶಕ್ಕೆ ಒಪ್ಪಿದ್ದಾರೆ", src_seed: "ಹಳೆಯ ಎಂಟ್ರಿ", src_voice: "ಧ್ವನಿಯಿಂದ", src_fix: "ತಿದ್ದುಪಡಿ", src_ui: "ಕೈಯಿಂದ",
     mic_err: "ಮೈಕ್ ಸಿಗಲಿಲ್ಲ. ಫೋನ್‌ನಲ್ಲಿ HTTPS ಲಿಂಕ್ ತೆರೆಯಿರಿ ಮತ್ತು ಮೈಕ್ ಅನುಮತಿ ಕೊಡಿ.", ignored: "ಛೋಟುಗೆ ಅಲ್ಲ, ಬಿಟ್ಟೆ" },
-  en: { get_lbl: "you get", give_lbl: "you owe", settled: "Settled", d_owe: "You owe", d_yday: "Yesterday's entries", d_alarms: "Reminders", d_closing: "Daily summary time", alarm_title: "Reminder", cancel_alarm: "Remove", add: "Add", add_title: "New customer", name: "Name", phone: "Phone (optional)", save: "Save", cancel: "Cancel", edit: "Edit name / phone", edit_title: "Edit customer", remove: "Remove customer", remove_q: "Remove this customer from the list? Their history stays in the audit log.", saved: "Saved", new_acct: "New account", fix_name: "Fix name", renamed: "Name changed", balance: "Due", tag: "Your kirana, your voice", first_entry: "Say today's first entry", example: "“Ramesh, 340 credit”",
+  en: { convo: "Talk", get_lbl: "you get", give_lbl: "you owe", settled: "Settled", d_owe: "You owe", d_yday: "Yesterday's entries", d_alarms: "Reminders", d_closing: "Daily summary time", alarm_title: "Reminder", cancel_alarm: "Remove", add: "Add", add_title: "New customer", name: "Name", phone: "Phone (optional)", save: "Save", cancel: "Cancel", edit: "Edit name / phone", edit_title: "Edit customer", remove: "Remove customer", remove_q: "Remove this customer from the list? Their history stays in the audit log.", saved: "Saved", new_acct: "New account", fix_name: "Fix name", renamed: "Name changed", balance: "Due", tag: "Your kirana, your voice", first_entry: "Say today's first entry", example: "“Ramesh, 340 credit”",
     rem_title: "Polite reminder ready", rem_send: "Send on WhatsApp", close: "Close", d_credit: "You gave today",
     d_paid: "You got today", d_out: "You'll get from the market", d_top: "Highest dues", d_today: "Today's entries", search: "Find a customer",
     type: "Type", hold: "Hold and speak", send: "Send", tab_bolo: "Speak", tab_hisaab: "Summary", tab_khata: "Khata",
@@ -169,7 +169,7 @@ async function startAudio() {
   sink.gain.value = 0;
   src.connect(S.node).connect(sink).connect(S.ctx.destination);
   S.node.port.onmessage = (e) => {
-    if (S.mode === "wake") return onWakeFrame(e.data);
+    if (S.mode === "wake" || S.convo) return onWakeFrame(e.data);
     if (S.capturing && !S.muted && S.ws && S.ws.readyState === 1) S.ws.send(e.data);
   };
 }
@@ -197,7 +197,7 @@ function playPcm(buf) {
     S.waitingFirstAudio = false;
     showLatency(Math.round(performance.now() - S.releaseAt + (at - S.ctx.currentTime) * 1000), "phone");
   }
-  if (!S.speaking) { if (S.pv && S.mode === "wake") S.pv.pause(); S.speaking = true; if (!S.capturing || S.mode === "handsfree") setMic("speaking", tr("speaking")); }
+  if (!S.speaking) { S.replySeq = (S.replySeq || 0) + 1; if (S.pv && S.mode === "wake") S.pv.pause(); S.speaking = true; if (!S.capturing || S.mode === "handsfree") setMic("speaking", tr("speaking")); }
 }
 
 function stopPlayback() {
@@ -219,7 +219,9 @@ function loadScript(src) {
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const wakeAvailable = () => Boolean(S.wakeCfg || SR);
 // words the recognisers return for "Chotu" in Hindi / Kannada / English
-const WAKE_RE = /(chh?ott?[ou]o?|chotu|choto|छोटू|छोटु|छोटो|ಛೋಟು|ಚೋಟು|ಛೋಟೂ)/i;
+// "Chotu" as the recognisers write it (Latin, Devanagari, Kannada) — with or without hey/hi/oye/arre/ae in front
+// (not "chhota/chhote" = "small", which is said all day in a shop)
+const WAKE_RE = /(c+h*o+t+[uo]+\b|shot+u\b|jot+u\b|छो[टठ][ूुो]|चोट[ूु]|ಛೋಟು|ಚೋಟು|ಛೋಟೂ|ಚೋಟೂ)/i;
 
 /* Fallback wake word without any account: the browser's own speech recogniser (Chrome / Edge / Android).
    It listens for "Chotu" in short bursts and restarts itself; it pauses while Chotu is talking
@@ -238,14 +240,21 @@ function initWebSpeechWake() {
       for (let j = 0; j < e.results[i].length; j++)
         if (WAKE_RE.test(e.results[i][j].transcript)) { eng.pause(); onWake(); return; }
   };
-  rec.onend = () => { eng.running = false; setTimeout(() => eng.resume(), 300); };
+  rec.onstart = () => { eng.running = true; eng.startedAt = performance.now(); };
+  rec.onend = () => { eng.running = false; setTimeout(() => eng.resume(), 250); };
   rec.onerror = (e) => {
     if (e.error === "not-allowed" || e.error === "service-not-allowed") { eng.dead = true; addFeed(tr("wake_err"), "err"); }
   };
   eng.resume = () => {
-    if (eng.dead || eng.running || S.mode !== "wake" || S.wakeTurn || S.speaking) return;
-    try { rec.start(); eng.running = true; } catch (_) {}
+    if (eng.dead || eng.running || S.mode !== "wake" || S.convo || S.wakeTurn || S.speaking) return;
+    try { rec.start(); } catch (_) {}
   };
+  // watchdog: Chrome's recogniser silently stalls now and then; keep it alive and fresh
+  setInterval(() => {
+    if (eng.dead || S.mode !== "wake" || S.convo || S.wakeTurn || S.speaking) return;
+    if (!eng.running) eng.resume();
+    else if (performance.now() - (eng.startedAt || 0) > 50000) { try { rec.stop(); } catch (_) {} }
+  }, 1500);
   eng.pause = () => { try { rec.abort(); } catch (_) {} eng.running = false; };
   eng.process = () => {};
   S.pv = eng;
@@ -295,7 +304,7 @@ function onWakeFrame(buf) {
   if (!w) {
     S.floorBuf.push(db);
     if (S.floorBuf.length > 120) S.floorBuf.shift();            // ~4 s of shop noise
-    if (S.pv && S.pv.kind !== "webspeech" && !S.speaking) S.pv.process(frame);
+    if (S.pv && S.pv.kind !== "webspeech" && !S.speaking && !S.convo) S.pv.process(frame);
     return;
   }
   // capturing one command: gate = shop noise + 12 dB (someone close to the phone)
@@ -316,13 +325,14 @@ function beep() {
   o.start(); o.stop(S.ctx.currentTime + 0.12);
 }
 function onWake(followUp = false) {
-  if (S.mode !== "wake" || S.wakeTurn) return;
+  if ((S.mode !== "wake" && !S.convo) || S.wakeTurn) return;
   if (!followUp) { stopPlayback(); send({ type: "interrupt" }); beep(); if (navigator.vibrate) navigator.vibrate(20); }
   if (S.pv) S.pv.pause();
   S.wakeTurn = { start: performance.now(), heard: false, lastLoud: 0, run: 0, wait: followUp ? 8000 : 5000, followUp };
   S.capturing = true;
-  send({ type: "ptt_down", wake: true });
+  send({ type: "ptt_down", wake: true, followup: followUp });
   setMic("listening", tr("wake_listen"));
+  convoState("listening");
 }
 function endWakeTurn() {
   const w = S.wakeTurn;
@@ -330,14 +340,47 @@ function endWakeTurn() {
   S.capturing = false;
   S.releaseAt = performance.now();
   send({ type: "ptt_up" });
-  if (w && w.heard) { S.turnOpen = true; S.waitingFirstAudio = true; S.lastWake = true; setMic("thinking", tr("thinking")); }
-  else { S.lastWake = false; restMic(); if (S.pv) setTimeout(() => S.pv.resume(), 300); }
+  if (w && w.heard) { S.turnOpen = true; S.waitingFirstAudio = true; S.lastWake = true; setMic("thinking", tr("thinking")); convoState("thinking"); }
+  else {
+    S.lastWake = false; restMic();
+    if (S.convo) { setTimeout(() => onWake(true), 200); return; }       // conversation: keep listening
+    if (S.pv) setTimeout(() => S.pv.resume(), 300);
+  }
 }
 function afterReplyDone() {
+  if (S.convo) { convoState("listening"); if (!S.wakeTurn) setTimeout(() => onWake(true), 250); return; }
   if (S.mode === "wake" && S.pv) { S.pv.quietUntil = performance.now() + 800; setTimeout(() => S.pv && !S.wakeTurn && S.pv.resume(), 900); }
-  if (S.mode !== "wake" || !S.lastWake || S.wakeTurn) return;
-  S.lastWake = false;                 // one follow-up window per reply
+  // follow-up listening only when Chotu asked a question; otherwise back to sleep (ignore counter chatter)
+  if (S.mode !== "wake" || !S.lastWake || S.wakeTurn || !S.followNeeded) return;
+  S.lastWake = false;
   setTimeout(() => onWake(true), 250);
+}
+
+/* --------------------------------------------- voice conversation (no reading)
+   Full-screen: Chotu listens, answers aloud, listens again, until you close it. */
+function convoState(state, caption) {
+  if (!S.convo) return;
+  const o = $("#convo");
+  o.dataset.state = state;
+  o.querySelector(".c-status").textContent = tr(state === "listening" ? "wake_listen" : state === "thinking" ? "thinking" : "speaking");
+  if (caption !== undefined) o.querySelector(".c-caption").textContent = caption;
+}
+function openConvo() {
+  if (!S.live) { toast("Mock mode"); return; }
+  S.convo = true;
+  if (S.pv && S.pv.pause) S.pv.pause();
+  $("#convo").hidden = false;
+  convoState("listening", "");
+  stopPlayback();
+  onWake(true);
+}
+function closeConvo() {
+  S.convo = false;
+  $("#convo").hidden = true;
+  if (S.wakeTurn) { S.wakeTurn = null; S.capturing = false; send({ type: "ptt_up" }); }
+  stopPlayback(); send({ type: "interrupt" });
+  restMic();
+  if (S.mode === "wake" && S.pv) setTimeout(() => S.pv.resume(), 300);
 }
 
 /* ------------------------------------------------------------ talk controls */
@@ -400,8 +443,12 @@ const micState = (t) => ($("#micState").textContent = t);
 /* ------------------------------------------------------------------ replies */
 function onReply(m) {
   S.turnOpen = false;
-  // reply arrived: if no audio follows shortly (TTS off/failed), stop the spinner
-  setTimeout(() => { if (!S.speaking && !S.sources.length) { restMic(); afterReplyDone(); } }, 1500);
+  S.followNeeded = Boolean(m.pending);
+  // reply arrived: if no audio follows (TTS off/failed), stop the spinner. Spoken replies get time to start.
+  const myReply = (S.replySeq = (S.replySeq || 0) + 1);
+  const wait = m.speak && S.live ? 8000 : 1200;
+  setTimeout(() => { if (myReply === S.replySeq && !S.speaking && !S.sources.length) { restMic(); afterReplyDone(); } }, wait);
+  if (S.convo) convoState("speaking", m.display);
   if (m.lang && m.lang !== S.replyLang) { S.replyLang = m.lang; if (S.lang === "auto") applyI18n(); }
   addFeed(m.display, "bot");
   const q = $("#question");
@@ -703,6 +750,9 @@ function wire() {
     if (!f.hidden) $("#typeInput").focus();
   };
   $("#addCustBtn").onclick = openAdd;
+  $("#convoBtn").onclick = openConvo;
+  $("#convo .c-close").onclick = closeConvo;
+  $("#convo .c-orb").onclick = () => { if (S.speaking) { stopPlayback(); send({ type: "interrupt" }); afterReplyDone(); } };
   const saveClosing = () => fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ closing_time: $("#closingTime").value, closing_on: $("#closingOn").checked }) }).then(() => toast(tr("saved")));
   $("#closingTime").onchange = saveClosing;

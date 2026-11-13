@@ -322,3 +322,29 @@ main {
 h2 { font-family: var(--hand); }
 .dock { background: #FBF8EE; }
 .mic { box-shadow: 0 6px 18px rgba(14,107,69,.35), inset 0 0 0 4px rgba(255,255,255,.18); }
+
+/* voice conversation button + full-screen mode */
+.convo-btn {
+  align-self: center; margin: 0 0 8px; border: 0; border-radius: 999px; padding: 8px 18px;
+  background: #13261D; color: #fff; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px;
+}
+.convo-btn svg { width: 18px; height: 18px; fill: currentColor; }
+.convo {
+  position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 22px; background: radial-gradient(circle at 50% 40%, #145C3E 0%, #0A2E20 70%); color: #F3F7F2; padding: 24px;
+}
+.convo .c-close { position: absolute; top: calc(16px + env(safe-area-inset-top)); right: 16px; width: 44px; height: 44px;
+  border-radius: 50%; border: 0; background: rgba(255,255,255,.14); color: #fff; font-size: 18px; }
+.convo .c-title { font-family: var(--hand); font-size: 22px; margin: 0; opacity: .85; }
+.convo .c-orb { width: 190px; height: 190px; border-radius: 50%; border: 0; padding: 0; background: transparent; display: grid; place-items: center; }
+.convo .c-orb span { width: 150px; height: 150px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #FFF6DC, #E2A21B 45%, #0E6B45 100%);
+  box-shadow: 0 0 60px rgba(226,162,27,.45); transition: transform .3s; }
+.convo[data-state="listening"] .c-orb span { animation: breathe 1.6s ease-in-out infinite; }
+.convo[data-state="thinking"] .c-orb span { animation: spinorb 1.2s linear infinite; filter: saturate(.7); }
+.convo[data-state="speaking"] .c-orb span { animation: talk .45s ease-in-out infinite alternate; }
+@keyframes breathe { 50% { transform: scale(1.08); } }
+@keyframes spinorb { to { transform: rotate(360deg) scale(.92); } }
+@keyframes talk { from { transform: scale(.94); } to { transform: scale(1.12); } }
+.convo .c-status { font-size: 18px; font-weight: 700; margin: 0; }
+.convo .c-caption { font-size: 14px; opacity: .55; margin: 0; max-width: 320px; text-align: center; min-height: 40px; }

@@ -240,6 +240,8 @@ class Session:
             return self._step_closing_time(item, turn)
         if c.intent == "RENAME_CUSTOMER":
             return self._step_rename(item, queue, turn)
+        if c.intent == "REMOVE_CUSTOMER":
+            return self._step_remove(item, queue, turn)
         if c.intent in ("CHAT", "GREETING", "UNKNOWN") and getattr(c, "reply", None):
             turn.parts.append(c.reply)
             return False
@@ -329,6 +331,12 @@ class Session:
             return True
         item.customer_id = cid
         cust = self._customer(cid)
+        if c.settle_all and c.amount is None:
+            bal = self.ledger.balance(cid)
+            if bal <= 0:
+                turn.parts += R.simple("already_settled", lang, name=R.name_for(cust, lang))
+                return False
+            c.kind, c.kind_explicit, c.amount, c.confidence = "PAYMENT", True, bal, 0.95
         if c.amount is None:
             self._block(turn, Pending("need_amount", item, queue), R.ask_amount(R.name_for(cust, lang), c.kind, lang))
             return True
@@ -472,6 +480,27 @@ class Session:
         turn.events.append({"type": "customer_updated", "old": old_name, "customer": {"id": cust.id, "name": cust.name}})
         self._touch_customer(cid, turn)
         turn.parts += R.simple("customer_renamed", lang, name=R.name_for(cust, lang))
+        return False
+
+    def _step_remove(self, item: Item, queue: list[Item], turn: _Turn) -> bool:
+        lang = turn.lang
+        cid = self._resolve_customer(item, item.clause.mention, queue, turn, allow_context=True, allow_new=False)
+        if cid is True:
+            return True
+        if cid is None:
+            turn.parts += R.simple("need_customer_name", lang)
+            return False
+        cust = self._customer(cid)
+        self._flush(turn)                      # say any entry for them first, while they still exist
+        try:
+            self.ledger.remove_customer(cid, session_id=self.id)
+        except ValueError:
+            turn.parts += R.simple("remove_not_zero", lang, name=R.name_for(cust, lang)) + R.balance(cust, self.ledger.balance(cid), lang)
+            return False
+        turn.events.append({"type": "customer_removed", "customer": {"id": cid, "name": cust.name}})
+        if self.last_customer == cid:
+            self.last_customer = None
+        turn.parts += R.simple("customer_removed", lang, name=R.name_for(cust, lang))
         return False
 
     # ---- QUERY

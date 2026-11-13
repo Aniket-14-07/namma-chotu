@@ -48,6 +48,7 @@ class Clause:
     alarm_text: str | None = None
     closing_time: str | None = None
     reply: str | None = None              # CHAT: what the LLM wants Chotu to say
+    settle_all: bool = False              # PAYMENT of the whole balance ("saara udhaar chuka diya")
     # customer management (LLM path): add / rename
     new_name: str | None = None
     name_hi: str | None = None

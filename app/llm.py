@@ -32,7 +32,7 @@ from .timeutil import month_start, today_ist, week_start
 log = logging.getLogger("llm")
 
 INTENTS = {"TXN", "QUERY", "CORRECTION", "UNDO", "YES", "NO", "ADD_CUSTOMER", "RENAME_CUSTOMER",
-           "GREETING", "FUTURE", "REMINDER", "SET_ALARM", "CLOSING_TIME", "CHAT", "UNKNOWN"}
+           "GREETING", "FUTURE", "REMINDER", "SET_ALARM", "CLOSING_TIME", "CHAT", "TIME", "REMOVE_CUSTOMER", "UNKNOWN"}
 QUERIES = {"BALANCE", "LAST_PAYMENT", "LAST_CREDIT", "PERIOD_CREDIT", "PERIOD_PAYMENTS", "PERIOD_SUMMARY",
            "TOTAL_OUTSTANDING", "TOP_DEBTORS", "CUSTOMER_COUNT", "LIST_CUSTOMERS", "LIST_ENTRIES", "CUSTOMER_HISTORY"}
 
@@ -111,6 +111,9 @@ Other rules:
   "Total kitna udhaar hai bazaar mein" = TOTAL_OUTSTANDING. "Sabse zyada kiska baaki" = TOP_DEBTORS.
 - "Nahi, 430 tha / galat, 340 nahi 430" = CORRECTION with new_amount_rupees. "Hata do / cancel / undo / ತೆಗೆ" = UNDO.
 - "Naya customer / naya khata / add karo <name>" = ADD_CUSTOMER with new_name.
+- "<X> ne saara udhaar chuka diya / cleared all dues" = TXN PAYMENT with settle_all true and amount null.
+- "<X> ka naam hata do / ab customer nahi hai / remove X" = REMOVE_CUSTOMER with customer.
+  "Cleared everything, remove him" = two commands: TXN PAYMENT settle_all, then REMOVE_CUSTOMER.
 - REMINDER = a polite payment reminder to SEND TO A CUSTOMER ("Ramesh ko yaad dila do", "remind Ramesh").
 - SET_ALARM = remind the SHOPKEEPER himself at a time ("mujhe shaam 7 baje yaad dilana ki Ramesh se paise lene hain",
   "kal subah 10 baje doodh wale ko call karna yaad dilana"). Fill alarm_at and alarm_text.
@@ -150,29 +153,89 @@ async def extract(text: str, customers, *, history: list[tuple[str, str]] | None
     now = now_ist()
     user = (f"Now: {now.strftime('%A %Y-%m-%d %H:%M')} (IST)\nKnown customers: {names or '(none yet)'}\n"
             f"{_ctx_lines(history or [], last_customer, pending, lang)}\n\nLATEST utterance: {text}")
-    body = {
-        "model": settings.llm_model,
-        "temperature": 0,
-        "response_format": {"type": "json_object"},
-        "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}],
-    }
-    if "gpt-oss" in settings.llm_model:
-        body["reasoning_effort"] = "low"     # Groq gpt-oss: keep the thinking short, this is a voice turn
-    url = settings.llm_base_url.rstrip("/") + "/chat/completions"
+    msgs = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
     t0 = time.perf_counter()
-    try:
-        r = await _http().post(url, json=body, headers={"Authorization": f"Bearer {settings.llm_api_key}"})
-        r.raise_for_status()
-        content = r.json()["choices"][0]["message"]["content"]
-        data = json.loads(content)
-    except Exception as e:  # network, timeout, bad JSON: the rule parser takes over
-        log.warning("llm failed (%.0f ms): %s", (time.perf_counter() - t0) * 1000, e)
+    data = await _call(msgs)
+    if data is None:
         return None
     log.info("llm %.0f ms: %s", (time.perf_counter() - t0) * 1000, json.dumps(data, ensure_ascii=False)[:400])
     raw = data.get("commands") or data.get("clauses") or []
     if not isinstance(raw, list):
         return None
     return to_clauses(text, raw, customers)
+
+
+# Groq retires models often; if the configured one is gone, these are tried in order (kept working one is remembered)
+FALLBACK_MODELS = ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "qwen/qwen3.6-27b", "llama-3.3-70b-versatile"]
+_working_model: str | None = None
+last_error: str | None = None
+
+
+def _parse_json(content: str) -> dict | None:
+    content = (content or "").strip()
+    if content.startswith("```"):
+        content = content.strip("`").split("\n", 1)[-1]
+    a, b = content.find("{"), content.rfind("}")
+    if a < 0 or b <= a:
+        return None
+    try:
+        return json.loads(content[a:b + 1])
+    except json.JSONDecodeError:
+        return None
+
+
+async def _call(msgs: list[dict]) -> dict | None:
+    """POST to the chat API with recovery: retired model -> next model; JSON mode or reasoning flag refused ->
+    retry without it. Remembers what worked. Any failure text is kept in last_error for the UI notice."""
+    global _working_model, last_error
+    url = settings.llm_base_url.rstrip("/") + "/chat/completions"
+    headers = {"Authorization": f"Bearer {settings.llm_api_key}"}
+    groq = "groq.com" in settings.llm_base_url
+    models = [_working_model] if _working_model else [settings.llm_model] + (
+        [m for m in FALLBACK_MODELS if m != settings.llm_model] if groq else [])
+    t0 = time.perf_counter()
+    for model in models:
+        for strict in (True, False):
+            body = {"model": model, "temperature": 0, "messages": msgs}
+            if strict:
+                body["response_format"] = {"type": "json_object"}
+                if "gpt-oss" in model:
+                    body["reasoning_effort"] = "low"
+            try:
+                r = await _http().post(url, json=body, headers=headers)
+            except Exception as e:
+                last_error = f"network: {e.__class__.__name__}"
+                log.warning("llm network error (%.0f ms): %s", (time.perf_counter() - t0) * 1000, e)
+                return None
+            if r.status_code in (401, 403):
+                last_error = f"HTTP {r.status_code}: the LLM_API_KEY was rejected"
+                log.warning("llm auth failed: %s", r.text[:300])
+                return None
+            if r.status_code == 429:
+                last_error = "HTTP 429: rate limited"
+                log.warning("llm rate limited: %s", r.text[:200])
+                return None
+            if r.status_code >= 400:
+                txt = r.text[:300]
+                last_error = f"HTTP {r.status_code} ({model}): {txt[:120]}"
+                log.warning("llm %s with %s strict=%s: %s", r.status_code, model, strict, txt)
+                low = txt.lower()
+                if "model" in low and any(w in low for w in ("decommission", "not found", "does not exist", "not exist", "deprecated")):
+                    break                      # try the next model
+                continue                       # try again without json mode / reasoning flag
+            try:
+                content = r.json()["choices"][0]["message"]["content"]
+            except Exception:
+                content = ""
+            data = _parse_json(content)
+            if data is None:
+                last_error = f"{model}: reply was not JSON"
+                continue
+            if _working_model != model:
+                log.info("llm using model %s", model)
+            _working_model, last_error = model, None
+            return data
+    return None
 
 
 def _hhmm(v) -> str | None:
@@ -270,6 +333,7 @@ def to_clauses(text: str, raw: list[dict], customers) -> list[Clause]:
         c.name_hi = (item.get("name_hi") or "").strip() or None
         phone = "".join(ch for ch in str(item.get("phone") or "") if ch.isdigit())
         c.phone = phone if 8 <= len(phone) <= 13 else None
+        c.settle_all = bool(item.get("settle_all"))
         if intent == "TXN":
             # kind None -> the dialogue asks "aapne diya ya aapko mila?" instead of guessing
             # trust the amount only if our own parser heard the same number
