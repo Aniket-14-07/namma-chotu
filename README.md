@@ -15,7 +15,7 @@
 
 ## For judges: try it in 2 minutes
 
-- **Live app:** [your-app.onrender.com link]. Open it in **Chrome** (phone or laptop) and allow the microphone. The first open can take about 50 s while the free server wakes up.
+- **Live app:** https://namma-chotu.onrender.com/ · Open it in **Chrome** (phone or laptop) and allow the microphone. The first open can take about 50 s while the free server wakes up.
 - Pick a language, then either **hold the mic**, say **"Hey Chotu"** and wait for the beep, or tap **बात करो** for a hands-free voice conversation.
 - Try saying:
   - "Suresh ne 500 ki shopping kari"
@@ -26,7 +26,7 @@
   - "7:45 बजे याद दिलाना चाय"
   - "आज का हिसाब"
 - The customers are synthetic demo data. The **Hisaab** tab shows today, yesterday, reminders and totals; **Khata** has every customer.
-- Demo video: [link] · Idea deck: [link]
+- Team Sigmoid: Monisha B K, Aniket Agarwal
 
 ## Architecture
 
